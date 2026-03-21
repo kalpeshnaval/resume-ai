@@ -15,10 +15,8 @@ type Props = {
 
 function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
   return (
-    <div className={`mx-auto flex h-[1123px] w-[794px] overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone}`}>
-      <div className={`flex h-full w-full flex-col overflow-hidden ${frameTone}`}>
-        {content}
-      </div>
+    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone} ${frameTone}`}>
+      {content}
     </div>
   );
 }
@@ -62,16 +60,16 @@ export default function CoverLetterPreview({ content, template }: Props) {
 
   const frameTone =
     template === "classic"
-      ? "border-stone-200 bg-[#fffdfa]"
+      ? "bg-[#fffdfa]"
       : template === "modern"
-        ? "border-slate-200 bg-[#f8fafc]"
+        ? "bg-[#f8fafc]"
         : template === "minimal"
-          ? "border-zinc-200 bg-white"
+          ? "bg-white"
           : template === "executive"
-            ? "border-slate-300 bg-[#fcfbf7]"
+            ? "bg-[#fcfbf7]"
             : template === "editorial"
-              ? "border-amber-100 bg-[#fffaf2]"
-              : "border-slate-800 bg-[#f7f8fb]";
+              ? "bg-[#fffaf2]"
+              : "bg-[#f7f8fb]";
 
   return (
     <div id="letter-preview">

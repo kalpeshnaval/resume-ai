@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { FileText, PencilLine, Plus, Trash2 } from "lucide-react";
+import { FileText, PencilLine, Plus } from "lucide-react";
 import { Suspense } from "react";
 
+import DeleteResumeButton from "@/components/DeleteResumeButton";
 import ResumePreview from "@/components/ResumePreview";
 import { getOrCreateCurrentDbUser } from "@/lib/db-user";
 import { prisma } from "@/lib/prisma";
@@ -246,49 +247,4 @@ function normalizeResumeData(data: Partial<ResumeData> | undefined): ResumeData 
     education: Array.isArray(data?.education) ? data.education : [],
     skills: typeof data?.skills === "string" ? data.skills : "",
   };
-}
-
-function DeleteResumeButton({ resumeId }: { resumeId: string }) {
-  return (
-    <form
-      action={async () => {
-        "use server";
-
-        const { userId } = await auth();
-        if (!userId) {
-          redirect("/");
-        }
-
-        const dbUser = await getOrCreateCurrentDbUser();
-        if (!dbUser) {
-          redirect("/");
-        }
-
-        const resume = await prisma.resume.findFirst({
-          where: {
-            id: resumeId,
-            userId: dbUser.id,
-          },
-        });
-
-        if (!resume) {
-          return;
-        }
-
-        await prisma.resume.delete({
-          where: { id: resume.id },
-        });
-
-        redirect("/dashboard");
-      }}
-    >
-      <button
-        type="submit"
-        className="inline-flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
-      >
-        <Trash2 className="h-4 w-4" />
-        Delete
-      </button>
-    </form>
-  );
 }
