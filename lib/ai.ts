@@ -7,43 +7,106 @@ const apiKey = process.env.GEMINI_API_KEY || "";
 
 // Initialize the Google Generative AI with the API key
 export const genAI = new GoogleGenerativeAI(apiKey);
+const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-/**
- * Utility to generate a cover letter using Gemini's API.
- */
-export async function generateCoverLetter(companyName: string, companyAddress?: string, userContext?: string) {
+type ResumeReferenceFile = {
+  name: string;
+  type: string;
+  data: string;
+};
+
+type CoverLetterInput = {
+  companyName: string;
+  companyAddress?: string;
+  userContext?: string;
+  resumeFile?: ResumeReferenceFile | null;
+};
+
+function getTextModel() {
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not set.");
   }
 
-  // Use the recommended model for text generation
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  return genAI.getGenerativeModel({ model: modelName });
+}
 
-  const prompt = `
-  You are an expert career coach and professional copywriter. 
-  Write a compelling cover letter for a candidate applying to ${companyName} ${companyAddress ? `located at ${companyAddress}` : ""}.
-  
-  The candidate's core background / context (if any):
-  ${userContext || "A highly motivated professional looking to add direct value."}
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
 
-  Requirements:
-  - Keep it professional, modern, and engaging.
-  - Tailor it specifically reflecting insights common for ${companyName}'s industry.
-  - Exclude placeholder brackets like [Your Name] as much as possible, keep it readable and fluid.
-  - Do NOT output extra markdown around the response like \`\`\`markdown, just the raw text of the letter formatted with appropriate line breaks.
-  `;
+  return "Unknown Gemini error.";
+}
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+function extractJsonObject(text: string) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("AI did not return a valid JSON object.");
+  }
+
+  return text.slice(start, end + 1);
+}
+
+/**
+ * Utility to generate a cover letter using Gemini's API.
+ */
+export async function generateCoverLetter({
+  companyName,
+  companyAddress,
+  userContext,
+  resumeFile,
+}: CoverLetterInput) {
+  const model = getTextModel();
+
+  const promptParts: Array<
+    | string
+    | {
+        inlineData: {
+          mimeType: string;
+          data: string;
+        };
+      }
+  > = [
+    `You are an expert career coach and professional copywriter.
+
+Write a polished, realistic cover letter for a candidate applying to ${companyName}${companyAddress ? `, located at ${companyAddress}` : ""}.
+
+Candidate notes:
+${userContext?.trim() || "A highly motivated professional looking to add direct value."}
+
+Instructions:
+- Use the uploaded resume as the primary source of truth when it is provided.
+- Infer the strongest achievements, skills, and domain fit from the resume instead of inventing random facts.
+- Keep the letter natural, specific, and modern.
+- Avoid placeholders like [Your Name], [Company], or generic filler.
+- Keep it to roughly 250-400 words.
+- Return plain text only with normal paragraph breaks. No markdown, no bullet points, no code fences.`,
+  ];
+
+  if (resumeFile?.data && resumeFile.type) {
+    promptParts.push({
+      inlineData: {
+        mimeType: resumeFile.type,
+        data: resumeFile.data,
+      },
+    });
+  }
+
+  try {
+    const result = await model.generateContent(promptParts);
+    return result.response.text();
+  } catch (error) {
+    throw new Error(`Gemini cover letter request failed with model "${modelName}": ${getErrorMessage(error)}`);
+  }
 }
 
 /**
  * Utility to enhance a resume bullet point using Gemini.
  */
 export async function enhanceResumeBullet(bulletPoint: string) {
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
-  
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = getTextModel();
   
   const prompt = `
   Enhance the following resume bullet point to make it more impactful, metric-driven, and professional. 
@@ -52,28 +115,76 @@ export async function enhanceResumeBullet(bulletPoint: string) {
   Respond with ONLY the enhanced bullet point text, nothing else.
   `;
   
-  const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  try {
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (error) {
+    throw new Error(`Gemini bullet enhancement failed with model "${modelName}": ${getErrorMessage(error)}`);
+  }
 }
 
 /**
  * Chat with AI to suggest improvements or draft new content based on user instructions.
  */
 export async function chatWithAI(instructions: string, currentResumeData: ResumeData) {
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
-  
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = getTextModel();
   
   const prompt = `
-  You are an expert resume assistant. The user wants to modify or add to their resume.
+  You are an expert resume assistant. Update the resume JSON directly based on the user's instructions.
   User Instructions: "${instructions}"
   Current Resume Data (JSON): ${JSON.stringify(currentResumeData)}
-  
-  Provide a helpful response. If you are suggesting content for a new role or a summary, format it clearly so the user can copy it.
-  Keep your response professional and encouraging. 
-  Respond briefly and directly to the user's request.
+
+  Return valid JSON only with this exact shape:
+  {
+    "message": "short human-readable summary of what you changed",
+    "updatedData": {
+      "personalInfo": {
+        "fullName": "string",
+        "email": "string",
+        "phone": "string",
+        "location": "string",
+        "summary": "string"
+      },
+      "experience": [
+        {
+          "id": "string",
+          "title": "string",
+          "company": "string",
+          "startDate": "string",
+          "endDate": "string",
+          "description": "string"
+        }
+      ],
+      "education": [
+        {
+          "id": "string",
+          "degree": "string",
+          "school": "string",
+          "year": "string"
+        }
+      ],
+      "skills": "string"
+    }
+  }
+
+  Rules:
+  - Always return the full updatedData object, not partial fields.
+  - Preserve existing information unless the user asked to replace it.
+  - If the user asks to add content, write the new content into updatedData.
+  - If the request is not resume-edit related, keep updatedData unchanged and explain that briefly in message.
+  - Do not wrap the JSON in markdown fences.
   `;
   
-  const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const parsed = JSON.parse(extractJsonObject(text)) as {
+      message: string;
+      updatedData: ResumeData;
+    };
+
+    return parsed;
+  } catch (error) {
+    throw new Error(`Gemini chat request failed with model "${modelName}": ${getErrorMessage(error)}`);
+  }
 }

@@ -15,7 +15,6 @@ model User {
   email            String        @unique
   name             String?
   imageUrl         String?
-  isPremium        Boolean       @default(false)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   resumes          Resume[]
@@ -27,7 +26,6 @@ model Resume {
   title            String
   contentJson      String   // Stores structured resume JSON
   pdfUrl           String?  // Storage URL for generated PDF
-  isPremiumTemplate Boolean  @default(false)
   userId           String
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())

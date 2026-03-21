@@ -42,7 +42,7 @@ export default function Home() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-lg md:text-xl text-foreground/70 max-w-2xl mb-10"
         >
-          Stand out from the crowd with premium templates and AI-generated smart content. Join thousands of job seekers landing their dream roles.
+          Stand out from the crowd with polished templates and AI-generated smart content. Join thousands of job seekers landing their dream roles.
         </motion.p>
 
         <motion.div 
@@ -96,12 +96,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing / CTA */}
+      {/* CTA */}
       <section className="w-full py-24 flex flex-col items-center">
         <div className="max-w-3xl text-center px-4">
-          <h2 className="text-4xl font-bold mb-6">Upgrade to Premium</h2>
+          <h2 className="text-4xl font-bold mb-6">Everything You Need, Free</h2>
           <p className="text-lg text-foreground/70 mb-10">
-            Unlock 6+ premium templates, unlimited AI generation, and personalized smart cover letters researched directly for the company you apply to.
+            Sign in to access every template, unlimited AI generation, and personalized smart cover letters researched directly for the company you apply to.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -111,7 +111,7 @@ export default function Home() {
               <CheckCircle2 className="w-5 h-5 text-primary" /> Unlimited AI Uses
             </div>
             <div className="flex items-center gap-2 text-sm font-medium">
-              <CheckCircle2 className="w-5 h-5 text-primary" /> All Premium Templates
+              <CheckCircle2 className="w-5 h-5 text-primary" /> All Templates Included
             </div>
           </div>
         </div>

@@ -1,30 +1,70 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import type { Resume } from "@prisma/client";
 import Link from "next/link";
-import { FileText, Plus, Star, Trash2 } from "lucide-react";
+import { FileText, PencilLine, Plus, Trash2 } from "lucide-react";
 
+import ResumePreview from "@/components/ResumePreview";
+import { getOrCreateCurrentDbUser } from "@/lib/db-user";
+import { prisma } from "@/lib/prisma";
+
+type TemplateType = "standard" | "modern" | "minimalist" | "creative" | "executive" | "tech";
+
+type ResumeData = {
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    summary: string;
+  };
+  experience: Array<{
+    id: string;
+    title: string;
+    company: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+  }>;
+  education: Array<{
+    id: string;
+    school: string;
+    degree: string;
+    year: string;
+  }>;
+  skills: string;
+};
+
+type StoredResumePayload = {
+  data: ResumeData;
+  template?: TemplateType;
+};
+
+const emptyResumeData: ResumeData = {
+  personalInfo: {
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    summary: "",
+  },
+  experience: [],
+  education: [],
+  skills: "",
+};
 
 export default async function DashboardPage() {
   const { userId } = await auth();
-  const user = await currentUser();
 
-  if (!userId || !user) {
+  if (!userId) {
     redirect("/");
   }
 
   // Ensure user exists in our DB
-  let dbUser = await prisma.user.findUnique({ where: { clerkUserId: userId } });
+  const dbUser = await getOrCreateCurrentDbUser();
+
   if (!dbUser) {
-    dbUser = await prisma.user.create({
-      data: {
-        clerkUserId: userId,
-        email: user.emailAddresses[0].emailAddress,
-        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-        imageUrl: user.imageUrl,
-      },
-    });
+    redirect("/");
   }
 
   // Fetch their resumes
@@ -42,14 +82,6 @@ export default async function DashboardPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          {!dbUser.isPremium && (
-            <Link 
-              href="/premium" 
-              className="bg-linear-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-            >
-              <Star className="w-4 h-4" /> Upgrade to Premium
-            </Link>
-          )}
           <Link 
             href="/builder" 
             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium shadow hover:bg-primary/90 transition-all flex items-center gap-2"
@@ -80,22 +112,140 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {resumes.map((resume: Resume) => (
-            <div key={resume.id} className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all group relative">
-              <div className="aspect-[1/1.4] w-full bg-accent/50 rounded-lg mb-4 flex items-center justify-center border border-border">
-                <FileText className="w-12 h-12 text-primary/40" />
+            <div key={resume.id} className="overflow-hidden rounded-2xl border border-border bg-card/95 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg group relative">
+              <div className="mb-4 h-56 w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
+                <ResumeCardPreview resume={resume} />
               </div>
-              <h3 className="font-semibold text-lg truncate pr-8">{resume.title}</h3>
-              <p className="text-sm text-foreground/50 mt-1">
+              <h3 className="truncate pr-8 text-base font-semibold">{resume.title}</h3>
+              <p className="mt-1 text-sm text-foreground/50">
                 Updated {new Date(resume.updatedAt).toLocaleDateString()}
               </p>
-              
-              <button className="absolute bottom-6 right-6 p-2 bg-destructive/10 text-destructive rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground">
-                <Trash2 className="w-4 h-4" />
-              </button>
+
+              <div className="mt-4 flex items-center gap-2">
+                <Link
+                  href={`/builder?resumeId=${resume.id}`}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                >
+                  <PencilLine className="h-4 w-4" />
+                  Edit
+                </Link>
+                <DeleteResumeButton resumeId={resume.id} />
+              </div>
             </div>
           ))}
         </div>
       )}
     </main>
+  );
+}
+
+function ResumeCardPreview({ resume }: { resume: Resume }) {
+  const parsedResume = parseResumeContent(resume.contentJson);
+  const previewScale = 0.16;
+  const previewWidth = 794 * previewScale;
+  const previewHeight = 1123 * previewScale;
+
+  if (!parsedResume) {
+    return (
+      <div className="flex h-full items-center justify-center bg-accent/50">
+        <FileText className="w-12 h-12 text-primary/40" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full items-center justify-center overflow-hidden p-4">
+      <div
+        className="relative overflow-hidden rounded-md shadow-[0_16px_40px_rgba(15,23,42,0.35)]"
+        style={{
+          width: `${previewWidth}px`,
+          height: `${previewHeight}px`,
+        }}
+      >
+        <div
+          className="absolute left-0 top-0 origin-top-left"
+          style={{ transform: `scale(${previewScale})` }}
+        >
+          <ResumePreview data={parsedResume.data} template={parsedResume.template} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function parseResumeContent(contentJson: string): { data: ResumeData; template: TemplateType } | null {
+  try {
+    const parsed = JSON.parse(contentJson) as ResumeData | StoredResumePayload;
+
+    if ("data" in parsed) {
+      return {
+        data: normalizeResumeData(parsed.data),
+        template: parsed.template ?? "standard",
+      };
+    }
+
+    return {
+      data: normalizeResumeData(parsed),
+      template: "standard",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeResumeData(data: Partial<ResumeData> | undefined): ResumeData {
+  return {
+    personalInfo: {
+      ...emptyResumeData.personalInfo,
+      ...(data?.personalInfo ?? {}),
+    },
+    experience: Array.isArray(data?.experience) ? data.experience : [],
+    education: Array.isArray(data?.education) ? data.education : [],
+    skills: typeof data?.skills === "string" ? data.skills : "",
+  };
+}
+
+function DeleteResumeButton({ resumeId }: { resumeId: string }) {
+  return (
+    <form
+      action={async () => {
+        "use server";
+
+        const { userId } = await auth();
+        if (!userId) {
+          redirect("/");
+        }
+
+        const dbUser = await getOrCreateCurrentDbUser();
+        if (!dbUser) {
+          redirect("/");
+        }
+
+        const resume = await prisma.resume.findFirst({
+          where: {
+            id: resumeId,
+            userId: dbUser.id,
+          },
+        });
+
+        if (!resume) {
+          return;
+        }
+
+        await prisma.resume.delete({
+          where: { id: resume.id },
+        });
+
+        redirect("/dashboard");
+      }}
+    >
+      <button
+        type="submit"
+        className="inline-flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
+      >
+        <Trash2 className="h-4 w-4" />
+        Delete
+      </button>
+    </form>
   );
 }

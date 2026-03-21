@@ -6,27 +6,22 @@ type Props = {
 };
 
 export default function ResumePreview({ data, template = "standard" }: Props) {
-  // Define layout styles based on template
   const isModern = template === "modern";
   const isMinimalist = template === "minimalist";
   const isCreative = template === "creative";
   const isExecutive = template === "executive";
   const isTech = template === "tech";
 
-  // Base containers
-  const containerClass = `w-[800px] min-h-[1056px] text-black shadow-xl mx-auto flex flex-col mb-10 overflow-hidden transform scale-90 lg:scale-[0.8] origin-top bg-white ${
+  const containerClass = `w-[794px] min-h-[1123px] text-black shadow-xl mx-auto flex flex-col mb-10 overflow-hidden bg-white ${
     isModern ? "font-sans text-slate-800" :
     isMinimalist ? "font-serif text-gray-900" :
     isCreative ? "font-sans bg-slate-50 border-l-[16px] border-primary" :
     isExecutive ? "font-serif bg-[#fdfdfc] border-t-[8px] border-slate-900" :
     isTech ? "font-mono text-slate-900 bg-white" :
-    "font-sans p-10" /* Standard */
-  } ${!isStandard(template) ? "p-0" : ""}`;
+    "font-sans p-10"
+  } ${template !== "standard" ? "p-0" : ""}`;
 
-  function isStandard(t: string) { return t === "standard"; }
-
-  if (isStandard(template)) {
-    // 1. STANDARD TEMPLATE (Free)
+  if (template === "standard") {
     return (
       <div id="resume-preview" className={containerClass}>
         <header className="border-b-2 border-slate-900 pb-4 mb-6">
@@ -35,57 +30,72 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           </h1>
           <div className="flex flex-wrap gap-4 text-sm text-slate-600 font-medium">
             {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
-            {data.personalInfo.phone && <span>• {data.personalInfo.phone}</span>}
-            {data.personalInfo.location && <span>• {data.personalInfo.location}</span>}
+            {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
+            {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
           </div>
         </header>
 
         <div className="flex-1 space-y-6">
           {data.personalInfo.summary && (
             <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-3">Professional Summary</h2>
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-3">
+                Professional Summary
+              </h2>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{data.personalInfo.summary}</p>
             </section>
           )}
+
           {data.experience.length > 0 && (
             <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-4">Experience</h2>
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-4">
+                Experience
+              </h2>
               <div className="space-y-4">
-                {data.experience.map(exp => (
+                {data.experience.map((exp) => (
                   <div key={exp.id}>
-                    <div className="flex justify-between items-start mb-1">
+                    <div className="mb-1 flex items-start justify-between">
                       <h3 className="text-base font-bold text-slate-900">{exp.title}</h3>
-                      <span className="text-xs font-semibold bg-slate-100 px-2 py-1 rounded">{exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}</span>
+                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold">
+                        {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}
+                      </span>
                     </div>
-                    <div className="text-sm font-semibold text-slate-700 mb-2">{exp.company}</div>
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{exp.description}</p>
+                    <div className="mb-2 text-sm font-semibold text-slate-700">{exp.company}</div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{exp.description}</p>
                   </div>
                 ))}
               </div>
             </section>
           )}
+
           {data.education.length > 0 && (
             <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-4">Education</h2>
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-4">
+                Education
+              </h2>
               <div className="space-y-3">
-                {data.education.map(edu => (
-                  <div key={edu.id} className="flex justify-between items-start">
+                {data.education.map((edu) => (
+                  <div key={edu.id} className="flex items-start justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
                       <div className="text-sm text-slate-700">{edu.school}</div>
                     </div>
-                    <span className="text-xs font-semibold bg-slate-100 px-2 py-1 rounded">{edu.year}</span>
+                    <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold">{edu.year}</span>
                   </div>
                 ))}
               </div>
             </section>
           )}
+
           {data.skills && (
             <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-3">Skills</h2>
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-3">
+                Skills
+              </h2>
               <div className="flex flex-wrap gap-2 text-sm text-slate-800">
-                {data.skills.split(",").map((s, i) => s.trim() && (
-                  <span key={i} className="inline-block px-2 py-1 border border-slate-300 rounded font-medium">{s.trim()}</span>
+                {data.skills.split(",").map((skill, index) => skill.trim() && (
+                  <span key={index} className="inline-block rounded border border-slate-300 px-2 py-1 font-medium">
+                    {skill.trim()}
+                  </span>
                 ))}
               </div>
             </section>
@@ -95,10 +105,8 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
     );
   }
 
-  // Next 5 Premium Templates use a shared structured rendering but with different Tailwind layout mapping
   return (
     <div id="resume-preview" className={containerClass}>
-      {/* HEADER SECTION */}
       <header className={`
         ${isModern ? "bg-slate-900 text-white p-10" : ""}
         ${isMinimalist ? "text-center pt-16 pb-8 px-10" : ""}
@@ -124,43 +132,40 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           ${isTech ? "text-emerald-200/70" : ""}
         `}>
           {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
-          {data.personalInfo.phone && <span>• {data.personalInfo.phone}</span>}
-          {data.personalInfo.location && <span>• {data.personalInfo.location}</span>}
+          {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
+          {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
         </div>
       </header>
 
-      {/* BODY SECTION */}
       <div className={`flex-1 ${isCreative ? "flex" : ""}`}>
-        
-        {/* Creative Left Sidebar (Only visible in 'creative') */}
         {isCreative && (
-          <div className="w-1/3 bg-slate-100 p-8 pt-6 border-r border-slate-200 h-full">
+          <div className="h-full w-1/3 border-r border-slate-200 bg-slate-100 p-8 pt-6">
             {data.education.length > 0 && (
               <section className="mb-8">
-                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Education</h2>
+                <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-slate-400">Education</h2>
                 <div className="space-y-4">
-                  {data.education.map(edu => (
+                  {data.education.map((edu) => (
                     <div key={edu.id}>
                       <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
-                      <div className="text-xs text-slate-600 mb-1">{edu.school}</div>
+                      <div className="mb-1 text-xs text-slate-600">{edu.school}</div>
                       <div className="text-xs font-bold text-primary">{edu.year}</div>
                     </div>
                   ))}
                 </div>
               </section>
             )}
+
             {data.skills && (
               <section>
-                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Skills</h2>
-                <div className="flex flex-col gap-2 text-sm text-slate-700 font-medium">
-                  {data.skills.split(",").map((s, i) => s.trim() && <div key={i}>• {s.trim()}</div>)}
+                <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-slate-400">Skills</h2>
+                <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  {data.skills.split(",").map((skill, index) => skill.trim() && <div key={index}>- {skill.trim()}</div>)}
                 </div>
               </section>
             )}
           </div>
         )}
 
-        {/* Main Content Area */}
         <div className={`
           ${isModern ? "p-10 space-y-8" : ""}
           ${isMinimalist ? "px-16 py-8 space-y-10" : ""}
@@ -168,7 +173,6 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           ${isExecutive ? "px-12 py-10 space-y-8" : ""}
           ${isTech ? "p-8 space-y-6 bg-slate-50" : ""}
         `}>
-          
           {data.personalInfo.summary && (
             <section>
               <h2 className={`
@@ -204,24 +208,26 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                 Experience
               </h2>
               <div className="space-y-6">
-                {data.experience.map(exp => (
-                  <div key={exp.id} className={isMinimalist ? "grid grid-cols-[120px_1fr] gap-4 items-baseline" : ""}>
+                {data.experience.map((exp) => (
+                  <div key={exp.id} className={isMinimalist ? "grid grid-cols-[120px_1fr] items-baseline gap-4" : ""}>
                     {isMinimalist && (
-                      <div className="text-xs font-bold text-slate-400 tracking-wider">
-                        {exp.startDate} -<br/>{exp.endDate || "Present"}
+                      <div className="text-xs font-bold tracking-wider text-slate-400">
+                        {exp.startDate} -<br />{exp.endDate || "Present"}
                       </div>
                     )}
-                    
+
                     <div>
-                      <div className="flex justify-between items-baseline mb-1">
+                      <div className="mb-1 flex justify-between items-baseline">
                         <h3 className={`
                           ${isModern ? "text-lg font-medium text-slate-900" : ""}
                           ${isMinimalist ? "text-base font-bold text-slate-800 uppercase tracking-wide" : ""}
                           ${isCreative ? "text-base font-extrabold text-slate-900" : ""}
                           ${isExecutive ? "text-lg font-bold text-slate-900" : ""}
                           ${isTech ? "text-base font-bold text-slate-800" : ""}
-                        `}>{exp.title}</h3>
-                        
+                        `}>
+                          {exp.title}
+                        </h3>
+
                         {!isMinimalist && (
                           <span className={`
                             ${isModern ? "text-sm font-medium text-primary" : ""}
@@ -233,14 +239,17 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                           </span>
                         )}
                       </div>
+
                       <div className={`
                         ${isModern ? "text-slate-500 text-sm mb-3" : ""}
                         ${isMinimalist ? "text-primary text-sm font-medium mb-3" : ""}
                         ${isCreative ? "text-slate-500 text-sm font-medium mb-2" : ""}
                         ${isExecutive ? "text-slate-700 text-base font-medium mb-2" : ""}
                         ${isTech ? "text-slate-500 text-sm font-mono mb-2" : ""}
-                      `}>{exp.company}</div>
-                      
+                      `}>
+                        {exp.company}
+                      </div>
+
                       <div className={`
                         whitespace-pre-wrap
                         ${isModern ? "text-slate-600 text-sm leading-relaxed" : ""}
@@ -258,7 +267,6 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             </section>
           )}
 
-          {/* Render Education and Skills here for non-creative templates */}
           {!isCreative && data.education.length > 0 && (
             <section>
               <h2 className={`
@@ -270,28 +278,29 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                 Education
               </h2>
               <div className="space-y-4">
-                {data.education.map(edu => (
-                  <div key={edu.id} className={isMinimalist ? "grid grid-cols-[120px_1fr] gap-4 items-baseline" : "flex justify-between items-baseline"}>
-                    
+                {data.education.map((edu) => (
+                  <div key={edu.id} className={isMinimalist ? "grid grid-cols-[120px_1fr] items-baseline gap-4" : "flex justify-between items-baseline"}>
                     {isMinimalist && (
-                      <div className="text-xs font-bold text-slate-400 tracking-wider">
-                        {edu.year}
-                      </div>
+                      <div className="text-xs font-bold tracking-wider text-slate-400">{edu.year}</div>
                     )}
 
-                    <div className={isMinimalist ? "" : ""}>
+                    <div>
                       <h3 className={`
                         ${isModern ? "font-medium text-slate-900" : ""}
                         ${isMinimalist ? "font-bold text-slate-800 uppercase tracking-wide text-sm" : ""}
                         ${isExecutive ? "font-bold text-slate-900" : ""}
                         ${isTech ? "font-bold text-slate-800 text-sm" : ""}
-                      `}>{edu.degree}</h3>
+                      `}>
+                        {edu.degree}
+                      </h3>
                       <div className={`
                         ${isModern ? "text-sm text-slate-500" : ""}
                         ${isMinimalist ? "text-sm text-primary font-medium" : ""}
                         ${isExecutive ? "text-base text-slate-700" : ""}
                         ${isTech ? "text-sm text-slate-500 font-mono mt-1" : ""}
-                      `}>{edu.school}</div>
+                      `}>
+                        {edu.school}
+                      </div>
                     </div>
 
                     {!isMinimalist && (
@@ -299,9 +308,10 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                         ${isModern ? "text-sm font-medium text-primary" : ""}
                         ${isExecutive ? "text-sm font-medium text-slate-500 italic" : ""}
                         ${isTech ? "text-xs font-mono text-emerald-600" : ""}
-                      `}>{edu.year}</span>
+                      `}>
+                        {edu.year}
+                      </span>
                     )}
-
                   </div>
                 ))}
               </div>
@@ -309,7 +319,7 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           )}
 
           {!isCreative && data.skills && (
-             <section>
+            <section>
               <h2 className={`
                 ${isModern ? "text-lg font-semibold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4 mt-8" : ""}
                 ${isMinimalist ? "text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 text-center mt-10" : ""}
@@ -324,19 +334,22 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                 ${isExecutive ? "text-base text-slate-800 leading-relaxed" : ""}
                 ${isTech ? "flex flex-wrap gap-2" : ""}
               `}>
-                {isMinimalist || isExecutive 
-                  ? data.skills.split(",").map(s => s.trim()).join(" • ")
-                  : data.skills.split(",").map((s, i) => s.trim() && (
-                    <span key={i} className={`
-                      ${isModern ? "px-3 py-1 bg-slate-100 rounded-full font-medium" : ""}
-                      ${isTech ? "px-2 py-0.5 border border-emerald-200 bg-emerald-50 text-emerald-800 font-mono text-xs" : ""}
-                    `}>{s.trim()}</span>
-                  ))
-                }
+                {isMinimalist || isExecutive
+                  ? data.skills.split(",").map((skill) => skill.trim()).join(" | ")
+                  : data.skills.split(",").map((skill, index) => skill.trim() && (
+                    <span
+                      key={index}
+                      className={`
+                        ${isModern ? "px-3 py-1 bg-slate-100 rounded-full font-medium" : ""}
+                        ${isTech ? "px-2 py-0.5 border border-emerald-200 bg-emerald-50 text-emerald-800 font-mono text-xs" : ""}
+                      `}
+                    >
+                      {skill.trim()}
+                    </span>
+                  ))}
               </div>
             </section>
           )}
-
         </div>
       </div>
     </div>

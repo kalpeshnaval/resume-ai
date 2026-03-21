@@ -11,6 +11,8 @@
   --ring: #4f46e5;
   --card: #ffffff;
   --card-foreground: #020817;
+  --app-font-sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --app-font-mono: "Cascadia Code", Consolas, "Courier New", monospace;
 }
 
 @theme inline {
@@ -24,8 +26,8 @@
   --color-ring: var(--ring);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
