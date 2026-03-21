@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { ResumeData } from "@/app/builder/page";
 
 // Access your API key as an environment variable
 // Make sure to add this to your .env or .env.local file
@@ -49,6 +50,28 @@ export async function enhanceResumeBullet(bulletPoint: string) {
   Original: "${bulletPoint}"
   
   Respond with ONLY the enhanced bullet point text, nothing else.
+  `;
+  
+  const result = await model.generateContent(prompt);
+  return result.response.text().trim();
+}
+
+/**
+ * Chat with AI to suggest improvements or draft new content based on user instructions.
+ */
+export async function chatWithAI(instructions: string, currentResumeData: ResumeData) {
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
+  
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
+  const prompt = `
+  You are an expert resume assistant. The user wants to modify or add to their resume.
+  User Instructions: "${instructions}"
+  Current Resume Data (JSON): ${JSON.stringify(currentResumeData)}
+  
+  Provide a helpful response. If you are suggesting content for a new role or a summary, format it clearly so the user can copy it.
+  Keep your response professional and encouraging. 
+  Respond briefly and directly to the user's request.
   `;
   
   const result = await model.generateContent(prompt);

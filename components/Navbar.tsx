@@ -39,6 +39,9 @@ async function NavbarActions() {
           <Link href="/builder" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Builder
           </Link>
+          <Link href="/cover-letter" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+            AI Cover Letter
+          </Link>
           <UserButton />
         </>
       ) : (

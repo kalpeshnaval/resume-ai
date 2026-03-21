@@ -5,7 +5,6 @@ import type { Resume } from "@prisma/client";
 import Link from "next/link";
 import { FileText, Plus, Star, Trash2 } from "lucide-react";
 
-export const unstable_instant = { prefetch: 'static' };
 
 export default async function DashboardPage() {
   const { userId } = await auth();

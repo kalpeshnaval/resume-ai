@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import ResumePreview from "@/components/ResumePreview";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
-import { UploadCloud, Sparkles, LayoutTemplate, CloudIcon } from "lucide-react";
-import { useUploadThing } from "@/lib/uploadthing";
+import { UploadCloud, Sparkles, LayoutTemplate, MessageSquare, Send, X } from "lucide-react";
+import Link from "next/link";
 
 // Basic structure for Resume Data
 export type ResumeData = {
@@ -34,14 +34,25 @@ export default function BuilderPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [template, setTemplate] = useState<"standard" | "modern" | "minimalist" | "creative" | "executive" | "tech">("standard");
   const [isPremium, setIsPremium] = useState(false);
-  const { startUpload } = useUploadThing("pdfUploader");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai", content: string }>>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
 
   useEffect(() => {
-    // In a real app we would ping an API `/api/user/me`
-    // to check premium status. For demo, we check local storage or let standard flow work.
-    // Assuming UI enables it if user clicks.
-    // Fetch user status:
-    fetch("/api/ai/enhance", { method: "HEAD" }).catch(() => {}).finally(() => setIsPremium(true)); // Mocking premium enabled for demo ease if they clicked upgrade.
+    async function checkStatus() {
+      try {
+        const res = await fetch("/api/user/status");
+        if (res.ok) {
+          const { isPremium } = await res.json();
+          setIsPremium(isPremium);
+        }
+      } catch (e) {
+        console.error("Error checking premium status:", e);
+      }
+    }
+    checkStatus();
   }, []);
 
   const handleDownloadPDF = async () => {
@@ -50,61 +61,37 @@ export default function BuilderPage() {
     
     try {
       setIsGenerating(true);
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
+      
+      // Use html-to-image instead of html2canvas for better modern CSS support (lab, etc.)
+      const dataUrl = await toPng(element, { 
+        pixelRatio: 2, 
+        skipAutoScale: false,
+        backgroundColor: "#ffffff",
+        style: {
+          transform: "none", // Remove scale during capture
+        }
+      });
+
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("Resume.pdf");
+      // Calculate height to maintain aspect ratio
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise(resolve => img.onload = resolve);
+      const pdfHeight = (img.height * pdfWidth) / img.width;
+      
+      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${data.personalInfo.fullName || "Resume"}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF due to modern CSS color limits. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSaveToCloud = async () => {
-    const element = document.getElementById("resume-preview");
-    if (!element) return;
-    
-    try {
-      setIsGenerating(true);
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      
-      const pdfBlob = pdf.output("blob");
-      const file = new File([pdfBlob], `${data.personalInfo.fullName || "Resume"}.pdf`, { type: "application/pdf" });
-      
-      const res = await startUpload([file]);
-      if (res && res[0]) {
-         await fetch("/api/resumes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              title: `${data.personalInfo.fullName || "My"} Resume - ${template}`,
-              contentJson: JSON.stringify(data),
-              pdfUrl: res[0].url,
-              isPremiumTemplate: template !== "standard"
-            })
-         });
-         alert("Saved to cloud successfully!");
-      } else {
-         alert("Upload failed. Make sure you are logged in.");
-      }
-    } catch (error) {
-      console.error("Cloud save error:", error);
-      alert("Error saving to cloud.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+
 
   const handleEnhance = async (index: number) => {
     const textToEnhance = data.experience[index].description;
@@ -126,6 +113,41 @@ export default function BuilderPage() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatMessage.trim() || isChatLoading) return;
+
+    if (!isPremium) {
+      alert("AI Assistant is a premium feature!");
+      return;
+    }
+
+    const newUserMsg = { role: "user" as const, content: chatMessage };
+    setChatHistory(prev => [...prev, newUserMsg]);
+    setChatMessage("");
+    setIsChatLoading(true);
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instructions: chatMessage, currentData: data })
+      });
+      
+      if (res.ok) {
+        const { response } = await res.json();
+        setChatHistory(prev => [...prev, { role: "ai", content: response }]);
+      } else {
+        const errData = await res.json();
+        setChatHistory(prev => [...prev, { role: "ai", content: errData.error || "Sorry, I'm having trouble connecting right now." }]);
+      }
+    } catch (error) {
+       setChatHistory(prev => [...prev, { role: "ai", content: "Something went wrong. Please try again later." }]);
+    } finally {
+      setIsChatLoading(false);
     }
   };
 
@@ -343,11 +365,7 @@ export default function BuilderPage() {
                   <button
                     key={tmpl}
                     onClick={() => {
-                      if (tmpl !== "standard" && !isPremium) {
-                        alert("Upgrade to Premium to use this template!");
-                      } else {
                         setTemplate(tmpl);
-                      }
                     }}
                     className={`p-4 border-2 rounded-xl text-left capitalize font-semibold transition-all flex justify-between items-center ${
                       template === tmpl 
@@ -367,17 +385,10 @@ export default function BuilderPage() {
 
       {/* Primary Live Preview */}
       <section className="hidden md:flex flex-col w-1/2 lg:w-[55%] h-full bg-accent relative px-8 py-6">
-        <div className="absolute top-4 right-8 flex gap-3 z-10">
-          <button 
-            onClick={handleSaveToCloud} 
-            disabled={isGenerating}
-            className="bg-white text-black px-4 py-2 rounded-lg font-medium shadow-sm border border-border hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50"
-          >
-            <CloudIcon className="w-4 h-4" /> Save to Cloud
-          </button>
+        <div className="absolute top-4 right-8 flex gap-3 z-20">
           <button 
             onClick={handleDownloadPDF} 
-            disabled={isGenerating}
+            disabled={isGenerating || (template !== "standard" && !isPremium)}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium shadow hover:bg-primary/90 flex items-center gap-2 disabled:opacity-50"
           >
             <UploadCloud className="w-4 h-4" /> 
@@ -386,9 +397,108 @@ export default function BuilderPage() {
         </div>
         
         <div className="flex-1 w-full flex items-start justify-center overflow-y-auto pb-20 pt-16 mt-[-64px]">
-           <ResumePreview data={data} template={template} />
+           <div className="relative group">
+              <ResumePreview data={data} template={template} />
+              
+              {template !== "standard" && !isPremium && (
+                <div className="absolute inset-0 bg-background/20 backdrop-blur-[2px] flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="bg-card/90 border border-border p-6 rounded-2xl shadow-2xl flex flex-col items-center text-center max-w-xs pointer-events-auto">
+                    <Sparkles className="w-10 h-10 text-amber-500 mb-4" />
+                    <h3 className="text-lg font-bold">Premium Template</h3>
+                    <p className="text-sm text-foreground/60 mb-6">Upgrade to premium to download or save this professional layout.</p>
+                    <Link 
+                      href="/premium" 
+                      className="w-full bg-linear-to-r from-amber-500 to-orange-600 text-white py-2.5 rounded-xl font-semibold shadow-lg shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all text-sm mb-3"
+                    >
+                      Upgrade Now
+                    </Link>
+                    <button 
+                      onClick={() => setTemplate("standard")}
+                      className="text-xs text-foreground/40 hover:text-foreground transition-colors"
+                    >
+                      Use standard template for free
+                    </button>
+                  </div>
+                </div>
+              )}
+           </div>
         </div>
       </section>
+
+      {/* AI Assistant FAB */}
+      <button 
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
+      >
+        {isChatOpen ? <X /> : <MessageSquare />}
+        {!isChatOpen && (
+          <span className="absolute right-full mr-4 bg-card border border-border px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
+            AI Assistant
+          </span>
+        )}
+      </button>
+
+      {/* AI Chat Drawer */}
+      {isChatOpen && (
+        <div className="fixed bottom-24 right-8 w-80 md:w-96 h-[600px] max-h-[70vh] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div className="p-4 bg-primary text-primary-foreground flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              <span className="font-bold">AI Resume Assistant</span>
+            </div>
+            <button onClick={() => setIsChatOpen(false)}><X className="w-5 h-5 opacity-70 hover:opacity-100" /></button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-accent/30">
+            {chatHistory.length === 0 && (
+              <div className="text-center py-10 px-4">
+                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                   <MessageSquare className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-medium">Hello! How can I help you improve your resume today?</p>
+                <p className="text-xs text-foreground/50 mt-2">Try: &quot;Help me write a summary for a Senior Developer&quot; or &quot;Add a new experience for Google.&quot;</p>
+              </div>
+            )}
+            {chatHistory.map((msg, idx) => (
+              <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
+                  msg.role === "user" 
+                    ? "bg-primary text-primary-foreground rounded-tr-none" 
+                    : "bg-white border border-border rounded-tl-none text-foreground shadow-sm"
+                }`}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            {isChatLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-border p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" />
+                  <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:0.4s]" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSendMessage} className="p-4 bg-card border-t border-border flex gap-2">
+            <input 
+              type="text"
+              placeholder="Type your instructions..."
+              className="flex-1 bg-accent/50 border-none px-4 py-2 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none"
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+            />
+            <button 
+              type="submit"
+              disabled={isChatLoading || !chatMessage.trim()}
+              className="bg-primary text-primary-foreground p-2 rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
