@@ -16,8 +16,8 @@ type ExportTextPdfOptions = {
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
 const ROW_SCAN_ALPHA_THRESHOLD = 24;
-const CONTINUED_PAGE_TOP_MM = 10;
-const SPLIT_PAGE_BOTTOM_MM = 10;
+const CONTINUED_PAGE_TOP_MM = 12;
+const SPLIT_PAGE_BOTTOM_MM = 12;
 
 function findNaturalPageBreak(
   context: CanvasRenderingContext2D,
@@ -28,17 +28,21 @@ function findNaturalPageBreak(
 ) {
   const startRow = Math.max(minRow, preferredRow - 140);
   const endRow = Math.min(maxRow, preferredRow + 140);
+  const bandRadius = 4;
   let bestRow = preferredRow;
   let bestInkScore = Number.POSITIVE_INFINITY;
   let bestDistance = Number.POSITIVE_INFINITY;
 
   for (let row = startRow; row <= endRow; row += 1) {
-    const rowData = context.getImageData(0, row, canvasWidth, 1).data;
     let inkScore = 0;
 
-    for (let index = 3; index < rowData.length; index += 4) {
-      if (rowData[index] > ROW_SCAN_ALPHA_THRESHOLD) {
-        inkScore += 1;
+    for (let sampleRow = Math.max(minRow, row - bandRadius); sampleRow <= Math.min(maxRow, row + bandRadius); sampleRow += 1) {
+      const rowData = context.getImageData(0, sampleRow, canvasWidth, 1).data;
+
+      for (let index = 3; index < rowData.length; index += 4) {
+        if (rowData[index] > ROW_SCAN_ALPHA_THRESHOLD) {
+          inkScore += 1;
+        }
       }
     }
 

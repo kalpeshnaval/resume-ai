@@ -49,6 +49,33 @@ function extractJsonObject(text: string) {
   return text.slice(start, end + 1);
 }
 
+function normalizeResumeData(data: ResumeData) {
+  return {
+    personalInfo: {
+      fullName: data.personalInfo?.fullName ?? "",
+      email: data.personalInfo?.email ?? "",
+      phone: data.personalInfo?.phone ?? "",
+      location: data.personalInfo?.location ?? "",
+      summary: data.personalInfo?.summary ?? "",
+    },
+    experience: (data.experience ?? []).map((item, index) => ({
+      id: item.id?.trim() || `exp-${index + 1}`,
+      title: item.title ?? "",
+      company: item.company ?? "",
+      startDate: item.startDate ?? "",
+      endDate: item.endDate ?? "",
+      description: item.description ?? "",
+    })),
+    education: (data.education ?? []).map((item, index) => ({
+      id: item.id?.trim() || `edu-${index + 1}`,
+      degree: item.degree ?? "",
+      school: item.school ?? "",
+      year: item.year ?? "",
+    })),
+    skills: data.skills ?? "",
+  } satisfies ResumeData;
+}
+
 /**
  * Utility to generate a cover letter using Gemini's API.
  */
@@ -185,8 +212,91 @@ export async function chatWithAI(instructions: string, currentResumeData: Resume
       updatedData: ResumeData;
     };
 
-    return parsed;
+    return {
+      message: parsed.message,
+      updatedData: normalizeResumeData(parsed.updatedData),
+    };
   } catch (error) {
     throw new Error(`Gemini chat request failed with model "${modelName}": ${getErrorMessage(error)}`);
+  }
+}
+
+export async function extractResumeDataFromFile(resumeFile: ResumeReferenceFile) {
+  const model = getTextModel();
+
+  const promptParts: Array<
+    | string
+    | {
+        inlineData: {
+          mimeType: string;
+          data: string;
+        };
+      }
+  > = [
+    `You are an expert resume parser and career assistant.
+
+Extract the candidate information from the uploaded resume and return valid JSON only with this exact shape:
+{
+  "message": "short human-readable summary of what you extracted",
+  "updatedData": {
+    "personalInfo": {
+      "fullName": "string",
+      "email": "string",
+      "phone": "string",
+      "location": "string",
+      "summary": "string"
+    },
+    "experience": [
+      {
+        "id": "string",
+        "title": "string",
+        "company": "string",
+        "startDate": "string",
+        "endDate": "string",
+        "description": "string"
+      }
+    ],
+    "education": [
+      {
+        "id": "string",
+        "degree": "string",
+        "school": "string",
+        "year": "string"
+      }
+    ],
+    "skills": "comma separated skill list"
+  }
+}
+
+Rules:
+- Use the uploaded resume as the source of truth.
+- Keep the content professional and concise.
+- If a field is missing, return an empty string.
+- Merge repeated bullet points for the same role into a readable description paragraph.
+- Skills must be returned as a comma-separated string.
+- Give stable ids like exp-1, exp-2, edu-1, edu-2.
+- Return JSON only. Do not wrap it in markdown fences.`,
+    {
+      inlineData: {
+        mimeType: resumeFile.type,
+        data: resumeFile.data,
+      },
+    },
+  ];
+
+  try {
+    const result = await model.generateContent(promptParts);
+    const text = result.response.text().trim();
+    const parsed = JSON.parse(extractJsonObject(text)) as {
+      message: string;
+      updatedData: ResumeData;
+    };
+
+    return {
+      message: parsed.message,
+      updatedData: normalizeResumeData(parsed.updatedData),
+    };
+  } catch (error) {
+    throw new Error(`Gemini resume extraction failed with model "${modelName}": ${getErrorMessage(error)}`);
   }
 }

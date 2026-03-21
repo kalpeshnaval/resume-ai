@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { LayoutTemplate, MessageSquare, Save, Send, Sparkles, UploadCloud, X } from "lucide-react";
@@ -28,12 +28,38 @@ type StoredResumePayload = {
   template: TemplateType;
 };
 
+type ResumeReferenceFile = {
+  name: string;
+  type: string;
+  data: string;
+};
+
 const initialData: ResumeData = {
   personalInfo: { fullName: "", email: "", phone: "", location: "", summary: "" },
   experience: [],
   education: [],
   skills: "",
 };
+
+async function readFileAsBase64(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result;
+
+      if (typeof result !== "string") {
+        reject(new Error("Unable to read the selected resume."));
+        return;
+      }
+
+      resolve(result.split(",")[1] || "");
+    };
+
+    reader.onerror = () => reject(new Error("Unable to read the selected resume."));
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function BuilderPage() {
   const mobilePreviewScale = 0.32;
@@ -54,6 +80,9 @@ export default function BuilderPage() {
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai"; content: string }>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [resumeImportError, setResumeImportError] = useState("");
+  const [resumeImportFileName, setResumeImportFileName] = useState("");
+  const [isImportingResume, setIsImportingResume] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const desktopPreviewRef = useRef<HTMLDivElement | null>(null);
   const mobilePreviewRef = useRef<HTMLDivElement | null>(null);
@@ -219,6 +248,68 @@ export default function BuilderPage() {
     }
   };
 
+  const handleResumeImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!isSignedIn) {
+      alert("Please sign in to import your resume.");
+      return;
+    }
+
+    if (!["application/pdf", "text/plain"].includes(file.type)) {
+      setResumeImportError("Please upload a PDF or TXT resume.");
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      setResumeImportError("Please keep the resume file under 4MB.");
+      return;
+    }
+
+    try {
+      setResumeImportError("");
+      setIsImportingResume(true);
+      setResumeImportFileName(file.name);
+
+      const data = await readFileAsBase64(file);
+      const resumeFile: ResumeReferenceFile = {
+        name: file.name,
+        type: file.type,
+        data,
+      };
+
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "extract",
+          resumeFile,
+        }),
+      });
+
+      const payload = await res.json();
+
+      if (!res.ok) {
+        throw new Error(payload.error || "Failed to import resume.");
+      }
+
+      setData(payload.updatedData);
+      setSaveMessage(payload.message || `Imported resume data from ${file.name}.`);
+      setChatHistory((prev) => [
+        ...prev,
+        { role: "ai", content: payload.message || `Imported your resume from ${file.name}.` },
+      ]);
+    } catch (error) {
+      console.error(error);
+      setResumeImportError(error instanceof Error ? error.message : "Failed to import resume.");
+    } finally {
+      setIsImportingResume(false);
+    }
+  };
+
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!chatMessage.trim() || isChatLoading) return;
@@ -284,6 +375,38 @@ export default function BuilderPage() {
             </button>
             {saveMessage && (
               <span className="w-full text-xs font-medium text-emerald-600 sm:w-auto">{saveMessage}</span>
+            )}
+          </div>
+
+          <div className="mt-4 rounded-xl border border-dashed border-border bg-accent/30 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold">Import Resume with AI</div>
+                <div className="text-xs text-foreground/60">
+                  Upload a PDF or TXT resume and I&apos;ll extract the details into this template.
+                </div>
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-100">
+                <UploadCloud className="h-4 w-4" />
+                {isImportingResume ? "Importing..." : "Upload Resume"}
+                <input
+                  type="file"
+                  accept=".pdf,.txt"
+                  className="hidden"
+                  disabled={isImportingResume || !isLoaded || !isSignedIn}
+                  onChange={handleResumeImport}
+                />
+              </label>
+            </div>
+            {resumeImportFileName && !resumeImportError && (
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
+                {isImportingResume ? `Reading ${resumeImportFileName}...` : `Imported from ${resumeImportFileName}`}
+              </div>
+            )}
+            {resumeImportError && (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                {resumeImportError}
+              </div>
             )}
           </div>
 
