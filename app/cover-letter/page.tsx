@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
-import { Building2, Download, FileText, Loader2, MapPin, Sparkles, Upload } from "lucide-react";
+import { Building2, Download, FileText, Loader2, MapPin, Sparkles, Upload, X } from "lucide-react";
 
 import CoverLetterPreview, { type CoverLetterTemplate } from "@/components/CoverLetterPreview";
 import { exportElementToPdf } from "@/lib/pdf";
@@ -35,12 +35,17 @@ async function readFileAsBase64(file: File) {
 
 export default function CoverLetterPage() {
   const { isLoaded, isSignedIn } = useAuth();
+  const mobilePreviewScale = 0.32;
+  const mobilePreviewWidth = 794 * mobilePreviewScale;
+  const mobilePreviewHeight = 1123 * mobilePreviewScale;
+  const mobileZoomScale = 0.62;
   const [isGenerating, setIsGenerating] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [userContext, setUserContext] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [template, setTemplate] = useState<CoverLetterTemplate>("classic");
+  const [isPreviewZoomOpen, setIsPreviewZoomOpen] = useState(false);
   const [resumeFile, setResumeFile] = useState<ResumeReferenceFile | null>(null);
   const [resumeUploadError, setResumeUploadError] = useState("");
 
@@ -264,7 +269,25 @@ export default function CoverLetterPage() {
                 </div>
 
                 <div className="flex justify-start overflow-x-auto pb-4 sm:justify-center">
-                  <CoverLetterPreview content={generatedContent} template={template} />
+                  <div className="hidden sm:block">
+                    <CoverLetterPreview content={generatedContent} template={template} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewZoomOpen(true)}
+                    className="relative block overflow-hidden rounded-md shadow-[0_16px_40px_rgba(15,23,42,0.2)] sm:hidden"
+                    style={{
+                      width: `${mobilePreviewWidth}px`,
+                      height: `${mobilePreviewHeight}px`,
+                    }}
+                  >
+                    <div
+                      className="absolute left-0 top-0 origin-top-left"
+                      style={{ transform: `scale(${mobilePreviewScale})` }}
+                    >
+                      <CoverLetterPreview content={generatedContent} template={template} />
+                    </div>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -281,6 +304,45 @@ export default function CoverLetterPage() {
           </div>
         </div>
       </div>
+
+      {isPreviewZoomOpen && generatedContent && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm md:hidden">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 text-white">
+            <div>
+              <div className="text-lg font-semibold">Cover Letter Preview</div>
+              <div className="text-xs text-white/60">Tap outside or use close to return.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPreviewZoomOpen(false)}
+              className="rounded-xl border border-white/15 bg-white/5 p-2"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            aria-label="Close zoomed cover letter preview"
+            onClick={() => setIsPreviewZoomOpen(false)}
+            className="block h-[calc(100vh-73px)] w-full overflow-auto px-4 py-6"
+          >
+            <div
+              className="relative mx-auto overflow-hidden rounded-lg shadow-[0_24px_60px_rgba(15,23,42,0.35)]"
+              style={{
+                width: `${794 * mobileZoomScale}px`,
+                height: `${1123 * mobileZoomScale}px`,
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 origin-top-left"
+                style={{ transform: `scale(${mobileZoomScale})` }}
+              >
+                <CoverLetterPreview content={generatedContent} template={template} />
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
     </main>
   );
 }
