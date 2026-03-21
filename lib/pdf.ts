@@ -18,25 +18,59 @@ const A4_HEIGHT_MM = 297;
 
 export async function exportElementToPdf({ element, fileName }: ExportPdfOptions) {
   const pixelRatio = Math.min(window.devicePixelRatio || 1.5, 2);
-  const width = element.scrollWidth;
-  const height = element.scrollHeight;
+  const baseWidth = element.scrollWidth || element.clientWidth;
 
   const clone = element.cloneNode(true) as HTMLElement;
   const wrapper = document.createElement("div");
   wrapper.style.position = "fixed";
   wrapper.style.left = "-10000px";
   wrapper.style.top = "0";
-  wrapper.style.width = `${width}px`;
+  wrapper.style.width = `${baseWidth}px`;
   wrapper.style.background = "#ffffff";
   wrapper.style.padding = "0";
   wrapper.style.margin = "0";
   wrapper.style.zIndex = "-1";
+  wrapper.style.overflow = "visible";
   clone.style.transform = "none";
   clone.style.transformOrigin = "top left";
+  clone.style.width = `${baseWidth}px`;
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
 
   try {
+    const sourceNodes = [element, ...Array.from(element.querySelectorAll<HTMLElement>("*"))];
+    const cloneNodes = [clone, ...Array.from(clone.querySelectorAll<HTMLElement>("*"))];
+
+    sourceNodes.forEach((sourceNode, index) => {
+      const cloneNode = cloneNodes[index];
+
+      if (!cloneNode) {
+        return;
+      }
+
+      const computed = window.getComputedStyle(sourceNode);
+      const hidesOverflow =
+        computed.overflow === "hidden" ||
+        computed.overflow === "clip" ||
+        computed.overflowX === "hidden" ||
+        computed.overflowX === "clip" ||
+        computed.overflowY === "hidden" ||
+        computed.overflowY === "clip";
+
+      if (index === 0 || hidesOverflow || sourceNode.scrollHeight > sourceNode.clientHeight + 1) {
+        cloneNode.style.overflow = "visible";
+        cloneNode.style.height = "auto";
+        cloneNode.style.maxHeight = "none";
+      }
+
+      if (index === 0) {
+        cloneNode.style.minHeight = `${sourceNode.clientHeight}px`;
+      }
+    });
+
+    const width = clone.scrollWidth || clone.clientWidth || baseWidth;
+    const height = clone.scrollHeight || clone.clientHeight;
+
     const canvas = await toCanvas(clone, {
       backgroundColor: "#ffffff",
       cacheBust: true,
@@ -52,6 +86,9 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
         boxShadow: "none",
         border: "none",
         borderRadius: "0",
+        height: "auto",
+        maxHeight: "none",
+        overflow: "visible",
       },
     });
 

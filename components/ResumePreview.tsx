@@ -28,11 +28,10 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
 
   if (template === "standard") {
     return (
-      <div id="resume-preview">
-        {pageShell(
-          "bg-[#f8fafc]",
-          "bg-white",
-          <div className="flex h-full flex-col bg-white px-10 py-10">
+      pageShell(
+        "bg-[#f8fafc]",
+        "bg-white",
+        <div className="flex h-full flex-col bg-white px-10 py-10">
           <header className="mb-6 border-b-2 border-slate-900 pb-4">
             <h1 className="mb-2 text-4xl font-bold uppercase tracking-wider text-slate-900">
               {data.personalInfo.fullName || "Your Name"}
@@ -111,18 +110,16 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             )}
           </div>
           </div>,
-        )}
-      </div>
+      )
     );
   }
 
   if (template === "modern") {
     return (
-      <div id="resume-preview">
-        {pageShell(
-          "bg-[#eef2f7]",
-          "bg-[#f8fafc]",
-          <>
+      pageShell(
+        "bg-[#eef2f7]",
+        "bg-[#f8fafc]",
+        <>
         <header className="bg-slate-950 px-10 py-10 text-white">
           <h1 className="mb-2 text-4xl font-light tracking-tight">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-slate-300">
@@ -151,18 +148,16 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           />
         </div>
           </>,
-        )}
-      </div>
+      )
     );
   }
 
   if (template === "minimalist") {
     return (
-      <div id="resume-preview">
-        {pageShell(
-          "bg-[#f6f2ea]",
-          "bg-[#fcfaf7]",
-          <>
+      pageShell(
+        "bg-[#f6f2ea]",
+        "bg-[#fcfaf7]",
+        <>
         <header className="bg-[#fcfaf7] px-14 pb-8 pt-14 text-center">
           <h1 className="mb-4 text-5xl uppercase tracking-[0.2em] text-stone-900">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.22em] text-stone-500">
@@ -190,18 +185,16 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           />
         </div>
           </>,
-        )}
-      </div>
+      )
     );
   }
 
   if (template === "creative") {
     return (
-      <div id="resume-preview">
-        {pageShell(
-          "bg-[#fff5e8]",
-          "bg-[#fffbf5]",
-          <>
+      pageShell(
+        "bg-[#fff5e8]",
+        "bg-[#fffbf5]",
+        <>
         <header className="border-b border-amber-100 bg-[#fff7ea] px-10 pb-6 pt-10">
           <div className="text-sm font-black uppercase tracking-[0.28em] text-amber-500">Creative Resume</div>
           <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
@@ -249,22 +242,20 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
               skillsRenderer={() => null}
               omitEducation
               omitSkills
-            />
-          </div>
+          />
+        </div>
         </div>
           </>,
-        )}
-      </div>
+      )
     );
   }
 
   if (template === "executive") {
     return (
-      <div id="resume-preview">
-        {pageShell(
-          "bg-[#f2f0ea]",
-          "bg-[#fcfbf8]",
-          <>
+      pageShell(
+        "bg-[#f2f0ea]",
+        "bg-[#fcfbf8]",
+        <>
         <header className="border-b-4 border-double border-slate-300 bg-[#fcfbf8] px-12 pb-8 pt-12 text-center">
           <h1 className="mb-3 text-4xl uppercase tracking-[0.14em] text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap justify-center gap-3 text-sm italic text-slate-600">
@@ -288,17 +279,15 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           />
         </div>
           </>,
-        )}
-      </div>
+      )
     );
   }
 
   return (
-    <div id="resume-preview">
-      {pageShell(
-        "bg-[#eaf5f0]",
-        "bg-[#f3fbf8]",
-        <>
+    pageShell(
+      "bg-[#eaf5f0]",
+      "bg-[#f3fbf8]",
+      <>
       <header className="border-b-4 border-emerald-500 bg-emerald-950 px-8 py-8 text-emerald-50">
         <h1 className="mb-2 text-3xl font-bold uppercase tracking-tight text-emerald-400">{data.personalInfo.fullName || "Your Name"}</h1>
         <div className="flex flex-wrap gap-3 font-mono text-sm text-emerald-100/75">
@@ -328,8 +317,7 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
           />
         </div>
         </>,
-      )}
-    </div>
+    )
   );
 }
 

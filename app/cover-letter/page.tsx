@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { Building2, Download, FileText, Loader2, MapPin, Sparkles, Upload, X } from "lucide-react";
 
@@ -48,6 +48,13 @@ export default function CoverLetterPage() {
   const [isPreviewZoomOpen, setIsPreviewZoomOpen] = useState(false);
   const [resumeFile, setResumeFile] = useState<ResumeReferenceFile | null>(null);
   const [resumeUploadError, setResumeUploadError] = useState("");
+  const desktopPreviewRef = useRef<HTMLDivElement | null>(null);
+  const mobilePreviewRef = useRef<HTMLDivElement | null>(null);
+
+  const getDownloadElement = () => {
+    const candidates = [desktopPreviewRef.current, mobilePreviewRef.current];
+    return candidates.find((candidate) => candidate && candidate.offsetWidth > 0 && candidate.offsetHeight > 0) ?? null;
+  };
 
   const handleGenerate = async () => {
     if (!companyName.trim()) return;
@@ -85,7 +92,7 @@ export default function CoverLetterPage() {
       return;
     }
 
-    const element = document.getElementById("letter-preview");
+    const element = getDownloadElement();
     if (!generatedContent || !element) return;
 
     try {
@@ -269,7 +276,7 @@ export default function CoverLetterPage() {
                 </div>
 
                 <div className="flex justify-start overflow-x-auto pb-4 sm:justify-center">
-                  <div className="hidden sm:block">
+                  <div ref={desktopPreviewRef} className="hidden sm:block">
                     <CoverLetterPreview content={generatedContent} template={template} />
                   </div>
                   <button
@@ -282,6 +289,7 @@ export default function CoverLetterPage() {
                     }}
                   >
                     <div
+                      ref={mobilePreviewRef}
                       className="absolute left-0 top-0 origin-top-left"
                       style={{ transform: `scale(${mobilePreviewScale})` }}
                     >

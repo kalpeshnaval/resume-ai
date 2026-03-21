@@ -55,6 +55,13 @@ export default function BuilderPage() {
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai"; content: string }>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const desktopPreviewRef = useRef<HTMLDivElement | null>(null);
+  const mobilePreviewRef = useRef<HTMLDivElement | null>(null);
+
+  const getDownloadElement = () => {
+    const candidates = [desktopPreviewRef.current, mobilePreviewRef.current];
+    return candidates.find((candidate) => candidate && candidate.offsetWidth > 0 && candidate.offsetHeight > 0) ?? null;
+  };
 
   useEffect(() => {
     const container = chatScrollRef.current;
@@ -166,7 +173,7 @@ export default function BuilderPage() {
       return;
     }
 
-    const element = document.getElementById("resume-preview");
+    const element = getDownloadElement();
     if (!element) return;
 
     try {
@@ -546,6 +553,7 @@ export default function BuilderPage() {
             }}
           >
             <div
+              ref={mobilePreviewRef}
               className="absolute left-0 top-0 origin-top-left"
               style={{ transform: `scale(${mobilePreviewScale})` }}
             >
@@ -555,7 +563,7 @@ export default function BuilderPage() {
         </div>
 
         <div className="hidden w-full items-start justify-center overflow-x-auto overflow-y-hidden pb-2 md:mt-[-64px] md:flex md:flex-1 md:overflow-y-auto md:pb-20 md:pt-16">
-          <div className="group relative origin-top md:scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
+          <div ref={desktopPreviewRef} className="group relative origin-top md:scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
             <ResumePreview data={data} template={template} />
           </div>
         </div>

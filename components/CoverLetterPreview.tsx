@@ -71,19 +71,15 @@ export default function CoverLetterPreview({ content, template }: Props) {
               ? "bg-[#fffaf2]"
               : "bg-[#f7f8fb]";
 
-  return (
-    <div id="letter-preview">
-      {pageShell(
-        pageTone,
-        frameTone,
-        <div className={bodyClass}>
-          <div className="space-y-7 whitespace-pre-wrap">
-            {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
-        </div>,
-      )}
-    </div>
+  return pageShell(
+    pageTone,
+    frameTone,
+    <div className={bodyClass}>
+      <div className="space-y-7 whitespace-pre-wrap">
+        {paragraphs.map((paragraph, index) => (
+          <p key={index}>{paragraph}</p>
+        ))}
+      </div>
+    </div>,
   );
 }
