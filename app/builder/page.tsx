@@ -36,6 +36,9 @@ const initialData: ResumeData = {
 };
 
 export default function BuilderPage() {
+  const mobilePreviewScale = 0.32;
+  const mobilePreviewWidth = 794 * mobilePreviewScale;
+  const mobilePreviewHeight = 1123 * mobilePreviewScale;
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<ResumeData>(initialData);
@@ -530,8 +533,25 @@ export default function BuilderPage() {
           </div>
         )}
 
-        <div className="flex w-full items-start justify-center overflow-x-auto overflow-y-hidden pb-2 md:mt-[-64px] md:flex-1 md:overflow-y-auto md:pb-20 md:pt-16">
-          <div className="group relative origin-top scale-[0.32] sm:scale-[0.45] md:scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
+        <div className="flex w-full justify-center overflow-hidden pb-2 md:hidden">
+          <div
+            className="relative overflow-hidden rounded-md shadow-[0_16px_40px_rgba(15,23,42,0.2)]"
+            style={{
+              width: `${mobilePreviewWidth}px`,
+              height: `${mobilePreviewHeight}px`,
+            }}
+          >
+            <div
+              className="absolute left-0 top-0 origin-top-left"
+              style={{ transform: `scale(${mobilePreviewScale})` }}
+            >
+              <ResumePreview data={data} template={template} />
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden w-full items-start justify-center overflow-x-auto overflow-y-hidden pb-2 md:mt-[-64px] md:flex md:flex-1 md:overflow-y-auto md:pb-20 md:pt-16">
+          <div className="group relative origin-top md:scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
             <ResumePreview data={data} template={template} />
           </div>
         </div>

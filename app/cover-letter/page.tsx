@@ -4,7 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { Building2, Download, FileText, Loader2, MapPin, Sparkles, Upload } from "lucide-react";
 
-import { exportElementToPdf } from "@/lib/pdf";
+import { exportTextToPdf } from "@/lib/pdf";
 
 type ResumeReferenceFile = {
   name: string;
@@ -78,12 +78,11 @@ export default function CoverLetterPage() {
       return;
     }
 
-    const element = document.getElementById("letter-preview");
-    if (!element || !generatedContent) return;
+    if (!generatedContent) return;
 
     try {
-      await exportElementToPdf({
-        element,
+      exportTextToPdf({
+        text: generatedContent,
         fileName: `${companyName || "Company"}_Cover_Letter.pdf`,
       });
     } catch (error) {
