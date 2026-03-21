@@ -11,6 +11,18 @@ type Props = {
   template: CoverLetterTemplate;
 };
 
+const OUTER_PAGE_PADDING = "p-[28px]";
+
+function pageShell(pageTone: string, frameTone: string, content: React.ReactNode) {
+  return (
+    <div className={`mx-auto flex h-[1123px] w-[794px] overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone} ${OUTER_PAGE_PADDING}`}>
+      <div className={`flex h-full w-full flex-col overflow-hidden rounded-[6px] border ${frameTone}`}>
+        {content}
+      </div>
+    </div>
+  );
+}
+
 function getParagraphs(content: string) {
   return content
     .replace(/\r\n/g, "\n")
@@ -22,23 +34,13 @@ function getParagraphs(content: string) {
 export default function CoverLetterPreview({ content, template }: Props) {
   const paragraphs = getParagraphs(content);
 
-  const pageClass = `mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden rounded-[10px] border bg-white text-black shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${
-    template === "classic"
-      ? "border-stone-200 bg-[#fffdfa]"
-      : template === "modern"
-        ? "border-slate-200 bg-[#f8fafc]"
-        : template === "minimal"
-          ? "border-zinc-200 bg-white"
-          : template === "executive"
-            ? "border-slate-300 bg-[#fcfbf7]"
-            : template === "editorial"
-              ? "border-amber-100 bg-[#fffaf2]"
-              : "border-slate-800 bg-[#f7f8fb]"
-  }`;
-
   if (template === "classic") {
     return (
-      <div id="letter-preview" className={pageClass}>
+      <div id="letter-preview">
+        {pageShell(
+          "bg-[#f8f4ec]",
+          "border-stone-200 bg-[#fffdfa]",
+          <>
         <div className="border-b border-stone-200 px-16 pb-8 pt-14">
           <div className="text-[14px] uppercase tracking-[0.35em] text-stone-500">Cover Letter</div>
           <div className="mt-4 h-[2px] w-20 bg-stone-800" />
@@ -50,13 +52,19 @@ export default function CoverLetterPreview({ content, template }: Props) {
             ))}
           </div>
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "modern") {
     return (
-      <div id="letter-preview" className={pageClass}>
+      <div id="letter-preview">
+        {pageShell(
+          "bg-[#edf2f7]",
+          "border-slate-200 bg-[#f8fafc]",
+          <>
         <div className="bg-slate-950 px-16 py-12 text-white">
           <div className="text-sm uppercase tracking-[0.4em] text-slate-300">Application Letter</div>
           <div className="mt-5 flex items-center gap-4">
@@ -71,13 +79,19 @@ export default function CoverLetterPreview({ content, template }: Props) {
             ))}
           </div>
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "minimal") {
     return (
-      <div id="letter-preview" className={pageClass}>
+      <div id="letter-preview">
+        {pageShell(
+          "bg-[#f4f4f2]",
+          "border-zinc-200 bg-white",
+          <>
         <div className="px-16 pt-16 text-center">
           <div className="text-[13px] uppercase tracking-[0.5em] text-zinc-400">Letter</div>
           <div className="mx-auto mt-6 h-px w-24 bg-zinc-300" />
@@ -89,13 +103,19 @@ export default function CoverLetterPreview({ content, template }: Props) {
             ))}
           </div>
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "executive") {
     return (
-      <div id="letter-preview" className={pageClass}>
+      <div id="letter-preview">
+        {pageShell(
+          "bg-[#f2f0ea]",
+          "border-slate-300 bg-[#fcfbf7]",
+          <>
         <div className="border-b-4 border-double border-slate-300 px-16 py-12 text-center">
           <div className="text-[12px] uppercase tracking-[0.45em] text-slate-500">Executive Correspondence</div>
         </div>
@@ -106,13 +126,19 @@ export default function CoverLetterPreview({ content, template }: Props) {
             ))}
           </div>
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "editorial") {
     return (
-      <div id="letter-preview" className={pageClass}>
+      <div id="letter-preview">
+        {pageShell(
+          "bg-[#fff4e4]",
+          "border-amber-100 bg-[#fffaf2]",
+          <>
         <div className="grid grid-cols-[28px_1fr] bg-[#fff4df] px-12 py-12">
           <div className="rounded-full bg-amber-500" />
           <div className="pl-6">
@@ -127,12 +153,18 @@ export default function CoverLetterPreview({ content, template }: Props) {
             ))}
           </div>
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   return (
-    <div id="letter-preview" className={pageClass}>
+    <div id="letter-preview">
+      {pageShell(
+        "bg-[#e8edf6]",
+        "border-slate-800 bg-[#f7f8fb]",
+        <>
       <div className="bg-slate-900 px-16 py-10 text-slate-100">
         <div className="flex items-center justify-between">
           <div>
@@ -149,6 +181,8 @@ export default function CoverLetterPreview({ content, template }: Props) {
           ))}
         </div>
       </div>
+        </>,
+      )}
     </div>
   );
 }

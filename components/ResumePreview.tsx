@@ -8,6 +8,18 @@ type Props = {
   template?: ResumeTemplate;
 };
 
+const OUTER_PAGE_PADDING = "p-[28px]";
+
+function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
+  return (
+    <div className={`mx-auto flex h-[1123px] w-[794px] overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone} ${OUTER_PAGE_PADDING}`}>
+      <div className={`flex h-full w-full flex-col overflow-hidden rounded-[6px] border ${frameTone}`}>
+        {content}
+      </div>
+    </div>
+  );
+}
+
 function renderSkills(skills: string) {
   return skills
     .split(",")
@@ -18,24 +30,13 @@ function renderSkills(skills: string) {
 export default function ResumePreview({ data, template = "standard" }: Props) {
   const skills = renderSkills(data.skills);
 
-  const pageClass = `mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden rounded-[10px] border text-black shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${
-    template === "standard"
-      ? "border-slate-200 bg-white"
-      : template === "modern"
-        ? "border-slate-200 bg-[#f8fafc]"
-        : template === "minimalist"
-          ? "border-stone-200 bg-[#fcfaf7]"
-          : template === "creative"
-            ? "border-amber-100 bg-[#fffbf5]"
-            : template === "executive"
-              ? "border-slate-300 bg-[#fcfbf8]"
-              : "border-emerald-100 bg-[#f3fbf8]"
-  }`;
-
   if (template === "standard") {
     return (
-      <div id="resume-preview" className={pageClass}>
-        <div className="flex h-full flex-col bg-white px-10 py-10">
+      <div id="resume-preview">
+        {pageShell(
+          "bg-[#f8fafc]",
+          "border-slate-200 bg-white",
+          <div className="flex h-full flex-col bg-white px-10 py-10">
           <header className="mb-6 border-b-2 border-slate-900 pb-4">
             <h1 className="mb-2 text-4xl font-bold uppercase tracking-wider text-slate-900">
               {data.personalInfo.fullName || "Your Name"}
@@ -113,14 +114,19 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
               </section>
             )}
           </div>
-        </div>
+          </div>,
+        )}
       </div>
     );
   }
 
   if (template === "modern") {
     return (
-      <div id="resume-preview" className={pageClass}>
+      <div id="resume-preview">
+        {pageShell(
+          "bg-[#eef2f7]",
+          "border-slate-200 bg-[#f8fafc]",
+          <>
         <header className="bg-slate-950 px-10 py-10 text-white">
           <h1 className="mb-2 text-4xl font-light tracking-tight">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-slate-300">
@@ -148,13 +154,19 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             )}
           />
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "minimalist") {
     return (
-      <div id="resume-preview" className={pageClass}>
+      <div id="resume-preview">
+        {pageShell(
+          "bg-[#f6f2ea]",
+          "border-stone-200 bg-[#fcfaf7]",
+          <>
         <header className="bg-[#fcfaf7] px-14 pb-8 pt-14 text-center">
           <h1 className="mb-4 text-5xl uppercase tracking-[0.2em] text-stone-900">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.22em] text-stone-500">
@@ -181,13 +193,19 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             )}
           />
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "creative") {
     return (
-      <div id="resume-preview" className={pageClass}>
+      <div id="resume-preview">
+        {pageShell(
+          "bg-[#fff5e8]",
+          "border-amber-100 bg-[#fffbf5]",
+          <>
         <header className="border-b border-amber-100 bg-[#fff7ea] px-10 pb-6 pt-10">
           <div className="text-sm font-black uppercase tracking-[0.28em] text-amber-500">Creative Resume</div>
           <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
@@ -238,13 +256,19 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             />
           </div>
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   if (template === "executive") {
     return (
-      <div id="resume-preview" className={pageClass}>
+      <div id="resume-preview">
+        {pageShell(
+          "bg-[#f2f0ea]",
+          "border-slate-300 bg-[#fcfbf8]",
+          <>
         <header className="border-b-4 border-double border-slate-300 bg-[#fcfbf8] px-12 pb-8 pt-12 text-center">
           <h1 className="mb-3 text-4xl uppercase tracking-[0.14em] text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap justify-center gap-3 text-sm italic text-slate-600">
@@ -267,12 +291,18 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             executive
           />
         </div>
+          </>,
+        )}
       </div>
     );
   }
 
   return (
-    <div id="resume-preview" className={pageClass}>
+    <div id="resume-preview">
+      {pageShell(
+        "bg-[#eaf5f0]",
+        "border-emerald-100 bg-[#f3fbf8]",
+        <>
       <header className="border-b-4 border-emerald-500 bg-emerald-950 px-8 py-8 text-emerald-50">
         <h1 className="mb-2 text-3xl font-bold uppercase tracking-tight text-emerald-400">{data.personalInfo.fullName || "Your Name"}</h1>
         <div className="flex flex-wrap gap-3 font-mono text-sm text-emerald-100/75">
@@ -298,9 +328,11 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                 </span>
               ))}
             </div>
-          )}
-        />
-      </div>
+            )}
+          />
+        </div>
+        </>,
+      )}
     </div>
   );
 }
