@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-foreground/10 bg-background/80">
       <div className="container mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-center text-sm text-foreground/70 md:flex-row md:items-center md:justify-between md:text-left">
-        <p>Developed by Kalpesh Naval. Copyright Kalpesh Naval.</p>
+        <p>Developed by Kalpesh Naval © 2026.</p>
         <div className="flex items-center gap-3">
           <a
             href="https://www.linkedin.com/in/kalpeshnaval/"
