@@ -16,6 +16,8 @@ type ExportTextPdfOptions = {
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
 const ROW_SCAN_ALPHA_THRESHOLD = 24;
+const CONTINUED_PAGE_TOP_MM = 10;
+const SPLIT_PAGE_BOTTOM_MM = 10;
 
 function findNaturalPageBreak(
   context: CanvasRenderingContext2D,
@@ -132,8 +134,9 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
     });
 
     const pdf = new jsPDF("p", "mm", "a4");
-    const sourceSliceHeight = Math.floor((canvas.width * A4_HEIGHT_MM) / A4_WIDTH_MM);
+    const fullPageSliceHeight = Math.floor((canvas.width * A4_HEIGHT_MM) / A4_WIDTH_MM);
     const canvasContext = canvas.getContext("2d");
+    const usesSplitPadding = canvas.height > fullPageSliceHeight;
 
     if (!canvasContext) {
       throw new Error("Unable to read rendered PDF canvas.");
@@ -143,6 +146,10 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
     let pageIndex = 0;
 
     while (offsetY < canvas.height) {
+      const topMarginMm = usesSplitPadding && pageIndex > 0 ? CONTINUED_PAGE_TOP_MM : 0;
+      const bottomMarginMm = usesSplitPadding ? SPLIT_PAGE_BOTTOM_MM : 0;
+      const usablePageHeightMm = A4_HEIGHT_MM - topMarginMm - bottomMarginMm;
+      const sourceSliceHeight = Math.floor((canvas.width * usablePageHeightMm) / A4_WIDTH_MM);
       const remainingHeight = canvas.height - offsetY;
       let currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
 
@@ -191,7 +198,7 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
         pdf.addPage();
       }
 
-      pdf.addImage(pageDataUrl, "PNG", 0, 0, A4_WIDTH_MM, renderedHeight, undefined, "FAST");
+      pdf.addImage(pageDataUrl, "PNG", 0, topMarginMm, A4_WIDTH_MM, renderedHeight, undefined, "FAST");
       offsetY += currentSliceHeight;
       pageIndex += 1;
     }
