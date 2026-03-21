@@ -6,11 +6,20 @@ import jsPDF from "jspdf";
 type ExportPdfOptions = {
   element: HTMLElement;
   fileName: string;
+  backgroundColor?: string;
 };
 
 type ExportTextPdfOptions = {
   text: string;
   fileName: string;
+};
+
+type CoverLetterTemplate = "classic" | "modern" | "minimal" | "executive" | "editorial" | "midnight";
+
+type ExportCoverLetterPdfOptions = {
+  text: string;
+  fileName: string;
+  template: CoverLetterTemplate;
 };
 
 const A4_WIDTH_MM = 210;
@@ -61,9 +70,10 @@ function findNaturalPageBreak(
   return Math.max(minRow, Math.min(bestRow, maxRow));
 }
 
-export async function exportElementToPdf({ element, fileName }: ExportPdfOptions) {
+export async function exportElementToPdf({ element, fileName, backgroundColor = "#ffffff" }: ExportPdfOptions) {
   const pixelRatio = Math.min(window.devicePixelRatio || 1.5, 2);
   const baseWidth = element.scrollWidth || element.clientWidth;
+  const backgroundRgb = hexToRgb(backgroundColor);
 
   const clone = element.cloneNode(true) as HTMLElement;
   const wrapper = document.createElement("div");
@@ -71,7 +81,7 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
   wrapper.style.left = "-10000px";
   wrapper.style.top = "0";
   wrapper.style.width = `${baseWidth}px`;
-  wrapper.style.background = "#ffffff";
+  wrapper.style.background = backgroundColor;
   wrapper.style.padding = "0";
   wrapper.style.margin = "0";
   wrapper.style.zIndex = "-1";
@@ -117,7 +127,7 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
     const height = clone.scrollHeight || clone.clientHeight;
 
     const canvas = await toCanvas(clone, {
-      backgroundColor: "#ffffff",
+      backgroundColor,
       cacheBust: true,
       pixelRatio,
       skipAutoScale: true,
@@ -182,6 +192,7 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
       }
 
       context.fillStyle = "#ffffff";
+      context.fillStyle = backgroundColor;
       context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
       context.drawImage(
         canvas,
@@ -202,6 +213,8 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
         pdf.addPage();
       }
 
+      pdf.setFillColor(backgroundRgb.r, backgroundRgb.g, backgroundRgb.b);
+      pdf.rect(0, 0, A4_WIDTH_MM, A4_HEIGHT_MM, "F");
       pdf.addImage(pageDataUrl, "PNG", 0, topMarginMm, A4_WIDTH_MM, renderedHeight, undefined, "FAST");
       offsetY += currentSliceHeight;
       pageIndex += 1;
@@ -249,6 +262,117 @@ export function exportTextToPdf({ text, fileName }: ExportTextPdfOptions) {
     }
 
     cursorY += lineHeight * 0.8;
+  }
+
+  pdf.save(fileName);
+}
+
+function hexToRgb(color: string) {
+  const normalized = color.replace("#", "");
+  const expanded = normalized.length === 3
+    ? normalized
+        .split("")
+        .map((char) => `${char}${char}`)
+        .join("")
+    : normalized;
+
+  return {
+    r: Number.parseInt(expanded.slice(0, 2), 16),
+    g: Number.parseInt(expanded.slice(2, 4), 16),
+    b: Number.parseInt(expanded.slice(4, 6), 16),
+  };
+}
+
+function getCoverLetterTheme(template: CoverLetterTemplate) {
+  switch (template) {
+    case "classic":
+      return {
+        background: "#fffdfa",
+        text: "#292524",
+        font: "times" as const,
+      };
+    case "modern":
+      return {
+        background: "#f8fafc",
+        text: "#1e293b",
+        font: "helvetica" as const,
+      };
+    case "minimal":
+      return {
+        background: "#ffffff",
+        text: "#18181b",
+        font: "times" as const,
+      };
+    case "executive":
+      return {
+        background: "#fcfbf7",
+        text: "#0f172a",
+        font: "times" as const,
+      };
+    case "editorial":
+      return {
+        background: "#fffaf2",
+        text: "#78350f",
+        font: "times" as const,
+      };
+    default:
+      return {
+        background: "#f7f8fb",
+        text: "#1e293b",
+        font: "helvetica" as const,
+      };
+  }
+}
+
+export function exportCoverLetterToPdf({ text, fileName, template }: ExportCoverLetterPdfOptions) {
+  const pdf = new jsPDF("p", "mm", "a4");
+  const horizontalMargin = 18;
+  const topMargin = 20;
+  const bottomMargin = 20;
+  const lineHeight = 7;
+  const paragraphGap = 5;
+  const maxWidth = A4_WIDTH_MM - horizontalMargin * 2;
+  const maxY = A4_HEIGHT_MM - bottomMargin;
+  const theme = getCoverLetterTheme(template);
+  const backgroundRgb = hexToRgb(theme.background);
+  const textRgb = hexToRgb(theme.text);
+  const paragraphs = text.replace(/\r\n/g, "\n").split(/\n{2,}/);
+
+  const paintPageBackground = () => {
+    pdf.setFillColor(backgroundRgb.r, backgroundRgb.g, backgroundRgb.b);
+    pdf.rect(0, 0, A4_WIDTH_MM, A4_HEIGHT_MM, "F");
+    pdf.setTextColor(textRgb.r, textRgb.g, textRgb.b);
+    pdf.setFont(theme.font, "normal");
+    pdf.setFontSize(13);
+  };
+
+  paintPageBackground();
+
+  let cursorY = topMargin;
+
+  for (const paragraph of paragraphs) {
+    const content = paragraph.trim();
+
+    if (!content) {
+      cursorY += paragraphGap;
+      continue;
+    }
+
+    const lines = pdf.splitTextToSize(content, maxWidth) as string[];
+    const paragraphHeight = lines.length * lineHeight;
+
+    if (cursorY + paragraphHeight > maxY) {
+      pdf.addPage();
+      paintPageBackground();
+      cursorY = topMargin;
+    }
+
+    for (const line of lines) {
+      pdf.text(line, horizontalMargin, cursorY);
+      cursorY += lineHeight;
+    }
+
+    cursorY += paragraphGap;
   }
 
   pdf.save(fileName);

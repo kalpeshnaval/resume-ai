@@ -41,6 +41,15 @@ const initialData: ResumeData = {
   skills: "",
 };
 
+const resumePageBackgrounds: Record<TemplateType, string> = {
+  standard: "#f8fafc",
+  modern: "#eef2f7",
+  minimalist: "#f6f2ea",
+  creative: "#fff5e8",
+  executive: "#f2f0ea",
+  tech: "#eaf5f0",
+};
+
 async function readFileAsBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -210,6 +219,7 @@ export default function BuilderPage() {
       await exportElementToPdf({
         element,
         fileName: `${data.personalInfo.fullName || "Resume"}.pdf`,
+        backgroundColor: resumePageBackgrounds[template],
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
