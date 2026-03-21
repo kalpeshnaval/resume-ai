@@ -15,7 +15,7 @@ export default function Navbar() {
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <span className="font-bold text-xl tracking-tight text-foreground">
-            Next<span className="text-primary">Resume</span>
+            Next<span className="bg-linear-to-r from-primary to-indigo-400 bg-clip-text text-transparent">AI</span><span className="text-foreground/90">Resume</span>
           </span>
         </Link>
         
