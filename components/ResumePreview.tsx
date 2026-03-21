@@ -1,357 +1,405 @@
+import type { ReactNode } from "react";
 import type { ResumeData } from "@/app/builder/page";
+
+type ResumeTemplate = "standard" | "modern" | "minimalist" | "creative" | "executive" | "tech";
 
 type Props = {
   data: ResumeData;
-  template?: "standard" | "modern" | "minimalist" | "creative" | "executive" | "tech";
+  template?: ResumeTemplate;
 };
 
-export default function ResumePreview({ data, template = "standard" }: Props) {
-  const isModern = template === "modern";
-  const isMinimalist = template === "minimalist";
-  const isCreative = template === "creative";
-  const isExecutive = template === "executive";
-  const isTech = template === "tech";
+function renderSkills(skills: string) {
+  return skills
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
 
-  const containerClass = `w-[794px] min-h-[1123px] text-black shadow-xl mx-auto flex flex-col mb-10 overflow-hidden bg-white ${
-    isModern ? "font-sans text-slate-800" :
-    isMinimalist ? "font-serif text-gray-900" :
-    isCreative ? "font-sans bg-slate-50 border-l-[16px] border-primary" :
-    isExecutive ? "font-serif bg-[#fdfdfc] border-t-[8px] border-slate-900" :
-    isTech ? "font-mono text-slate-900 bg-white" :
-    "font-sans p-10"
-  } ${template !== "standard" ? "p-0" : ""}`;
+export default function ResumePreview({ data, template = "standard" }: Props) {
+  const skills = renderSkills(data.skills);
+
+  const pageClass = `mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden rounded-[10px] border text-black shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${
+    template === "standard"
+      ? "border-slate-200 bg-white"
+      : template === "modern"
+        ? "border-slate-200 bg-[#f8fafc]"
+        : template === "minimalist"
+          ? "border-stone-200 bg-[#fcfaf7]"
+          : template === "creative"
+            ? "border-amber-100 bg-[#fffbf5]"
+            : template === "executive"
+              ? "border-slate-300 bg-[#fcfbf8]"
+              : "border-emerald-100 bg-[#f3fbf8]"
+  }`;
 
   if (template === "standard") {
     return (
-      <div id="resume-preview" className={containerClass}>
-        <header className="border-b-2 border-slate-900 pb-4 mb-6">
-          <h1 className="text-4xl font-bold uppercase tracking-wider text-slate-900 mb-2">
-            {data.personalInfo.fullName || "Your Name"}
-          </h1>
-          <div className="flex flex-wrap gap-4 text-sm text-slate-600 font-medium">
+      <div id="resume-preview" className={pageClass}>
+        <div className="flex h-full flex-col bg-white px-10 py-10">
+          <header className="mb-6 border-b-2 border-slate-900 pb-4">
+            <h1 className="mb-2 text-4xl font-bold uppercase tracking-wider text-slate-900">
+              {data.personalInfo.fullName || "Your Name"}
+            </h1>
+            <div className="flex flex-wrap gap-3 text-sm font-medium text-slate-600">
+              {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
+              {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
+              {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
+            </div>
+          </header>
+
+          <div className="flex-1 space-y-6 overflow-hidden">
+            {data.personalInfo.summary && (
+              <section>
+                <h2 className="mb-3 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
+                  Professional Summary
+                </h2>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{data.personalInfo.summary}</p>
+              </section>
+            )}
+
+            {data.experience.length > 0 && (
+              <section>
+                <h2 className="mb-4 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
+                  Experience
+                </h2>
+                <div className="space-y-4">
+                  {data.experience.map((exp) => (
+                    <div key={exp.id}>
+                      <div className="mb-1 flex items-start justify-between gap-4">
+                        <h3 className="text-base font-bold text-slate-900">{exp.title}</h3>
+                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                          {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}
+                        </span>
+                      </div>
+                      <div className="mb-2 text-sm font-semibold text-slate-700">{exp.company}</div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{exp.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {data.education.length > 0 && (
+              <section>
+                <h2 className="mb-4 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
+                  Education
+                </h2>
+                <div className="space-y-3">
+                  {data.education.map((edu) => (
+                    <div key={edu.id} className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
+                        <div className="text-sm text-slate-700">{edu.school}</div>
+                      </div>
+                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{edu.year}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {skills.length > 0 && (
+              <section>
+                <h2 className="mb-3 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
+                  Skills
+                </h2>
+                <div className="flex flex-wrap gap-2 text-sm text-slate-800">
+                  {skills.map((skill) => (
+                    <span key={skill} className="rounded border border-slate-300 px-2 py-1 font-medium">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "modern") {
+    return (
+      <div id="resume-preview" className={pageClass}>
+        <header className="bg-slate-950 px-10 py-10 text-white">
+          <h1 className="mb-2 text-4xl font-light tracking-tight">{data.personalInfo.fullName || "Your Name"}</h1>
+          <div className="flex flex-wrap gap-3 text-sm text-slate-300">
             {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
             {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
             {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
           </div>
         </header>
-
-        <div className="flex-1 space-y-6">
-          {data.personalInfo.summary && (
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-3">
-                Professional Summary
-              </h2>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{data.personalInfo.summary}</p>
-            </section>
-          )}
-
-          {data.experience.length > 0 && (
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-4">
-                Experience
-              </h2>
-              <div className="space-y-4">
-                {data.experience.map((exp) => (
-                  <div key={exp.id}>
-                    <div className="mb-1 flex items-start justify-between">
-                      <h3 className="text-base font-bold text-slate-900">{exp.title}</h3>
-                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold">
-                        {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}
-                      </span>
-                    </div>
-                    <div className="mb-2 text-sm font-semibold text-slate-700">{exp.company}</div>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{exp.description}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {data.education.length > 0 && (
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-4">
-                Education
-              </h2>
-              <div className="space-y-3">
-                {data.education.map((edu) => (
-                  <div key={edu.id} className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
-                      <div className="text-sm text-slate-700">{edu.school}</div>
-                    </div>
-                    <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold">{edu.year}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {data.skills && (
-            <section>
-              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide border-b border-slate-300 pb-1 mb-3">
-                Skills
-              </h2>
-              <div className="flex flex-wrap gap-2 text-sm text-slate-800">
-                {data.skills.split(",").map((skill, index) => skill.trim() && (
-                  <span key={index} className="inline-block rounded border border-slate-300 px-2 py-1 font-medium">
-                    {skill.trim()}
+        <div className="flex flex-1 flex-col bg-[#f8fafc] px-10 py-8">
+          <ResumeBody
+            data={data}
+            skills={skills}
+            headingClass="mb-4 border-b-2 border-slate-200 pb-2 text-lg font-semibold text-slate-900"
+            bodyTextClass="text-sm leading-relaxed text-slate-600"
+            companyClass="mb-2 text-sm font-medium text-slate-500"
+            dateClass="rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm"
+            skillsRenderer={(items) => (
+              <div className="flex flex-wrap gap-2">
+                {items.map((skill) => (
+                  <span key={skill} className="rounded-full bg-white px-3 py-1 text-sm font-medium text-slate-700 shadow-sm">
+                    {skill}
                   </span>
                 ))}
               </div>
-            </section>
-          )}
+            )}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "minimalist") {
+    return (
+      <div id="resume-preview" className={pageClass}>
+        <header className="bg-[#fcfaf7] px-14 pb-8 pt-14 text-center">
+          <h1 className="mb-4 text-5xl uppercase tracking-[0.2em] text-stone-900">{data.personalInfo.fullName || "Your Name"}</h1>
+          <div className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.22em] text-stone-500">
+            {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
+            {data.personalInfo.phone && <span>{data.personalInfo.phone}</span>}
+            {data.personalInfo.location && <span>{data.personalInfo.location}</span>}
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col bg-[#fcfaf7] px-16 py-8">
+          <ResumeBody
+            data={data}
+            skills={skills}
+            headingClass="mb-5 text-center text-xs font-bold uppercase tracking-[0.28em] text-stone-400"
+            bodyTextClass="text-sm leading-loose text-stone-700"
+            companyClass="mb-2 text-sm font-medium text-stone-500"
+            dateClass="text-xs font-bold uppercase tracking-[0.2em] text-stone-400"
+            educationRowClass="grid grid-cols-[100px_1fr] gap-4"
+            experienceRowClass="grid grid-cols-[120px_1fr] gap-4"
+            minimalist
+            skillsRenderer={(items) => (
+              <div className="text-center text-sm uppercase tracking-wide text-stone-700">
+                {items.join(" | ")}
+              </div>
+            )}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "creative") {
+    return (
+      <div id="resume-preview" className={pageClass}>
+        <header className="border-b border-amber-100 bg-[#fff7ea] px-10 pb-6 pt-10">
+          <div className="text-sm font-black uppercase tracking-[0.28em] text-amber-500">Creative Resume</div>
+          <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
+          <div className="mt-3 flex flex-wrap gap-3 text-sm font-medium text-amber-700">
+            {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
+            {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
+            {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
+          </div>
+        </header>
+        <div className="flex flex-1 bg-[#fffbf5]">
+          <aside className="w-[30%] border-r border-amber-100 bg-[#fff4df] p-8">
+            {data.education.length > 0 && (
+              <section className="mb-8">
+                <h2 className="mb-4 text-sm font-black uppercase tracking-[0.24em] text-amber-500">Education</h2>
+                <div className="space-y-4">
+                  {data.education.map((edu) => (
+                    <div key={edu.id}>
+                      <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
+                      <div className="mb-1 text-xs text-slate-600">{edu.school}</div>
+                      <div className="text-xs font-bold text-amber-700">{edu.year}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+            {skills.length > 0 && (
+              <section>
+                <h2 className="mb-4 text-sm font-black uppercase tracking-[0.24em] text-amber-500">Skills</h2>
+                <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  {skills.map((skill) => (
+                    <div key={skill}>- {skill}</div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </aside>
+          <div className="flex-1 bg-[#fffbf5] p-8">
+            <ResumeBody
+              data={data}
+              skills={[]}
+              headingClass="mb-4 text-sm font-black uppercase tracking-[0.24em] text-amber-500"
+              bodyTextClass="text-sm leading-relaxed text-slate-700"
+              companyClass="mb-2 text-sm font-medium text-slate-500"
+              dateClass="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-800"
+              skillsRenderer={() => null}
+              omitEducation
+              omitSkills
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "executive") {
+    return (
+      <div id="resume-preview" className={pageClass}>
+        <header className="border-b-4 border-double border-slate-300 bg-[#fcfbf8] px-12 pb-8 pt-12 text-center">
+          <h1 className="mb-3 text-4xl uppercase tracking-[0.14em] text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
+          <div className="flex flex-wrap justify-center gap-3 text-sm italic text-slate-600">
+            {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
+            {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
+            {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col bg-[#fcfbf8] px-12 py-10">
+          <ResumeBody
+            data={data}
+            skills={skills}
+            headingClass="mb-4 border-b border-slate-400 pb-1 text-xl font-serif text-slate-900"
+            bodyTextClass="text-base leading-relaxed text-slate-800"
+            companyClass="mb-2 text-base font-medium text-slate-700"
+            dateClass="text-sm italic text-slate-500"
+            skillsRenderer={(items) => (
+              <div className="text-base leading-relaxed text-slate-800">{items.join(" | ")}</div>
+            )}
+            executive
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div id="resume-preview" className={containerClass}>
-      <header className={`
-        ${isModern ? "bg-slate-900 text-white p-10" : ""}
-        ${isMinimalist ? "text-center pt-16 pb-8 px-10" : ""}
-        ${isCreative ? "p-10 pb-6 border-b border-slate-200" : ""}
-        ${isExecutive ? "text-center p-12 pb-8 border-b-4 border-double border-slate-300" : ""}
-        ${isTech ? "bg-emerald-950 text-emerald-50 p-8 border-b-4 border-emerald-500" : ""}
-      `}>
-        <h1 className={`
-          ${isModern ? "text-4xl font-light mb-2" : ""}
-          ${isMinimalist ? "text-5xl tracking-widest uppercase mb-4 text-slate-800" : ""}
-          ${isCreative ? "text-5xl font-extrabold text-slate-900 tracking-tighter mb-2" : ""}
-          ${isExecutive ? "text-4xl font-serif text-slate-900 uppercase tracking-wide mb-3" : ""}
-          ${isTech ? "text-3xl font-bold uppercase tracking-tight text-emerald-400 mb-2" : ""}
-        `}>
-          {data.personalInfo.fullName || "Your Name"}
-        </h1>
-        <div className={`
-          flex flex-wrap gap-x-4 gap-y-2 text-sm
-          ${isModern ? "text-slate-300" : ""}
-          ${isMinimalist ? "justify-center text-slate-500 uppercase tracking-widest text-xs" : ""}
-          ${isCreative ? "text-primary font-medium" : ""}
-          ${isExecutive ? "justify-center text-slate-600 italic" : ""}
-          ${isTech ? "text-emerald-200/70" : ""}
-        `}>
+    <div id="resume-preview" className={pageClass}>
+      <header className="border-b-4 border-emerald-500 bg-emerald-950 px-8 py-8 text-emerald-50">
+        <h1 className="mb-2 text-3xl font-bold uppercase tracking-tight text-emerald-400">{data.personalInfo.fullName || "Your Name"}</h1>
+        <div className="flex flex-wrap gap-3 font-mono text-sm text-emerald-100/75">
           {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
           {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
           {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
         </div>
       </header>
-
-      <div className={`flex-1 ${isCreative ? "flex" : ""}`}>
-        {isCreative && (
-          <div className="h-full w-1/3 border-r border-slate-200 bg-slate-100 p-8 pt-6">
-            {data.education.length > 0 && (
-              <section className="mb-8">
-                <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-slate-400">Education</h2>
-                <div className="space-y-4">
-                  {data.education.map((edu) => (
-                    <div key={edu.id}>
-                      <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
-                      <div className="mb-1 text-xs text-slate-600">{edu.school}</div>
-                      <div className="text-xs font-bold text-primary">{edu.year}</div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {data.skills && (
-              <section>
-                <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-slate-400">Skills</h2>
-                <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                  {data.skills.split(",").map((skill, index) => skill.trim() && <div key={index}>- {skill.trim()}</div>)}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-
-        <div className={`
-          ${isModern ? "p-10 space-y-8" : ""}
-          ${isMinimalist ? "px-16 py-8 space-y-10" : ""}
-          ${isCreative ? "w-2/3 p-8 pt-6 space-y-8" : ""}
-          ${isExecutive ? "px-12 py-10 space-y-8" : ""}
-          ${isTech ? "p-8 space-y-6 bg-slate-50" : ""}
-        `}>
-          {data.personalInfo.summary && (
-            <section>
-              <h2 className={`
-                ${isModern ? "text-lg font-semibold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4" : ""}
-                ${isMinimalist ? "text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 text-center" : ""}
-                ${isCreative ? "text-sm font-black text-slate-400 uppercase tracking-widest mb-3" : ""}
-                ${isExecutive ? "text-xl font-serif text-slate-900 border-b border-slate-400 pb-1 mb-4" : ""}
-                ${isTech ? "text-sm font-bold text-emerald-700 uppercase mb-2 flex items-center gap-2 before:content-['>']" : ""}
-              `}>
-                {isMinimalist ? "Profile" : "Professional Summary"}
-              </h2>
-              <p className={`
-                ${isModern ? "text-slate-600 leading-relaxed" : ""}
-                ${isMinimalist ? "text-slate-700 leading-loose text-justify" : ""}
-                ${isCreative ? "text-slate-700 leading-relaxed font-medium text-sm" : ""}
-                ${isExecutive ? "text-slate-800 leading-relaxed text-justify indent-8" : ""}
-                ${isTech ? "text-slate-700 leading-relaxed text-sm" : ""}
-              `}>
-                {data.personalInfo.summary}
-              </p>
-            </section>
+      <div className="flex flex-1 flex-col bg-[#f3fbf8] px-8 py-8">
+        <ResumeBody
+          data={data}
+          skills={skills}
+          headingClass="mb-3 flex items-center gap-2 text-sm font-bold uppercase text-emerald-800 before:content-['>']"
+          bodyTextClass="text-sm leading-relaxed text-slate-700"
+          companyClass="mb-2 font-mono text-sm text-slate-500"
+          dateClass="rounded bg-emerald-100 px-2 py-1 font-mono text-xs text-emerald-700"
+          tech
+          skillsRenderer={(items) => (
+            <div className="flex flex-wrap gap-2">
+              {items.map((skill) => (
+                <span key={skill} className="rounded border border-emerald-200 bg-white px-2 py-1 font-mono text-xs text-emerald-800">
+                  {skill}
+                </span>
+              ))}
+            </div>
           )}
-
-          {data.experience.length > 0 && (
-            <section>
-              <h2 className={`
-                ${isModern ? "text-lg font-semibold text-slate-900 border-b-2 border-slate-100 pb-2 mb-6" : ""}
-                ${isMinimalist ? "text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 text-center" : ""}
-                ${isCreative ? "text-sm font-black text-slate-400 uppercase tracking-widest mb-6" : ""}
-                ${isExecutive ? "text-xl font-serif text-slate-900 border-b border-slate-400 pb-1 mb-6" : ""}
-                ${isTech ? "text-sm font-bold text-emerald-700 uppercase mb-4 flex items-center gap-2 before:content-['>']" : ""}
-              `}>
-                Experience
-              </h2>
-              <div className="space-y-6">
-                {data.experience.map((exp) => (
-                  <div key={exp.id} className={isMinimalist ? "grid grid-cols-[120px_1fr] items-baseline gap-4" : ""}>
-                    {isMinimalist && (
-                      <div className="text-xs font-bold tracking-wider text-slate-400">
-                        {exp.startDate} -<br />{exp.endDate || "Present"}
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="mb-1 flex justify-between items-baseline">
-                        <h3 className={`
-                          ${isModern ? "text-lg font-medium text-slate-900" : ""}
-                          ${isMinimalist ? "text-base font-bold text-slate-800 uppercase tracking-wide" : ""}
-                          ${isCreative ? "text-base font-extrabold text-slate-900" : ""}
-                          ${isExecutive ? "text-lg font-bold text-slate-900" : ""}
-                          ${isTech ? "text-base font-bold text-slate-800" : ""}
-                        `}>
-                          {exp.title}
-                        </h3>
-
-                        {!isMinimalist && (
-                          <span className={`
-                            ${isModern ? "text-sm font-medium text-primary" : ""}
-                            ${isCreative ? "text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-full" : ""}
-                            ${isExecutive ? "text-sm font-medium text-slate-500 italic" : ""}
-                            ${isTech ? "text-xs font-mono text-emerald-600 bg-emerald-100 px-2 py-0.5" : ""}
-                          `}>
-                            {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={`
-                        ${isModern ? "text-slate-500 text-sm mb-3" : ""}
-                        ${isMinimalist ? "text-primary text-sm font-medium mb-3" : ""}
-                        ${isCreative ? "text-slate-500 text-sm font-medium mb-2" : ""}
-                        ${isExecutive ? "text-slate-700 text-base font-medium mb-2" : ""}
-                        ${isTech ? "text-slate-500 text-sm font-mono mb-2" : ""}
-                      `}>
-                        {exp.company}
-                      </div>
-
-                      <div className={`
-                        whitespace-pre-wrap
-                        ${isModern ? "text-slate-600 text-sm leading-relaxed" : ""}
-                        ${isMinimalist ? "text-slate-600 text-sm leading-relaxed" : ""}
-                        ${isCreative ? "text-slate-700 text-sm leading-relaxed" : ""}
-                        ${isExecutive ? "text-slate-800 text-base leading-relaxed" : ""}
-                        ${isTech ? "text-slate-600 text-sm leading-relaxed border-l-2 border-emerald-200 pl-4 ml-1" : ""}
-                      `}>
-                        {exp.description}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {!isCreative && data.education.length > 0 && (
-            <section>
-              <h2 className={`
-                ${isModern ? "text-lg font-semibold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4 mt-8" : ""}
-                ${isMinimalist ? "text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 text-center mt-10" : ""}
-                ${isExecutive ? "text-xl font-serif text-slate-900 border-b border-slate-400 pb-1 mb-4 mt-8" : ""}
-                ${isTech ? "text-sm font-bold text-emerald-700 uppercase mb-4 mt-6 flex items-center gap-2 before:content-['>']" : ""}
-              `}>
-                Education
-              </h2>
-              <div className="space-y-4">
-                {data.education.map((edu) => (
-                  <div key={edu.id} className={isMinimalist ? "grid grid-cols-[120px_1fr] items-baseline gap-4" : "flex justify-between items-baseline"}>
-                    {isMinimalist && (
-                      <div className="text-xs font-bold tracking-wider text-slate-400">{edu.year}</div>
-                    )}
-
-                    <div>
-                      <h3 className={`
-                        ${isModern ? "font-medium text-slate-900" : ""}
-                        ${isMinimalist ? "font-bold text-slate-800 uppercase tracking-wide text-sm" : ""}
-                        ${isExecutive ? "font-bold text-slate-900" : ""}
-                        ${isTech ? "font-bold text-slate-800 text-sm" : ""}
-                      `}>
-                        {edu.degree}
-                      </h3>
-                      <div className={`
-                        ${isModern ? "text-sm text-slate-500" : ""}
-                        ${isMinimalist ? "text-sm text-primary font-medium" : ""}
-                        ${isExecutive ? "text-base text-slate-700" : ""}
-                        ${isTech ? "text-sm text-slate-500 font-mono mt-1" : ""}
-                      `}>
-                        {edu.school}
-                      </div>
-                    </div>
-
-                    {!isMinimalist && (
-                      <span className={`
-                        ${isModern ? "text-sm font-medium text-primary" : ""}
-                        ${isExecutive ? "text-sm font-medium text-slate-500 italic" : ""}
-                        ${isTech ? "text-xs font-mono text-emerald-600" : ""}
-                      `}>
-                        {edu.year}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {!isCreative && data.skills && (
-            <section>
-              <h2 className={`
-                ${isModern ? "text-lg font-semibold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4 mt-8" : ""}
-                ${isMinimalist ? "text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 text-center mt-10" : ""}
-                ${isExecutive ? "text-xl font-serif text-slate-900 border-b border-slate-400 pb-1 mb-4 mt-8" : ""}
-                ${isTech ? "text-sm font-bold text-emerald-700 uppercase mb-4 mt-6 flex items-center gap-2 before:content-['>']" : ""}
-              `}>
-                Skills
-              </h2>
-              <div className={`
-                ${isModern ? "flex flex-wrap gap-2 text-sm text-slate-700" : ""}
-                ${isMinimalist ? "text-center text-sm text-slate-600 leading-loose uppercase tracking-wide" : ""}
-                ${isExecutive ? "text-base text-slate-800 leading-relaxed" : ""}
-                ${isTech ? "flex flex-wrap gap-2" : ""}
-              `}>
-                {isMinimalist || isExecutive
-                  ? data.skills.split(",").map((skill) => skill.trim()).join(" | ")
-                  : data.skills.split(",").map((skill, index) => skill.trim() && (
-                    <span
-                      key={index}
-                      className={`
-                        ${isModern ? "px-3 py-1 bg-slate-100 rounded-full font-medium" : ""}
-                        ${isTech ? "px-2 py-0.5 border border-emerald-200 bg-emerald-50 text-emerald-800 font-mono text-xs" : ""}
-                      `}
-                    >
-                      {skill.trim()}
-                    </span>
-                  ))}
-              </div>
-            </section>
-          )}
-        </div>
+        />
       </div>
+    </div>
+  );
+}
+
+type ResumeBodyProps = {
+  data: ResumeData;
+  skills: string[];
+  headingClass: string;
+  bodyTextClass: string;
+  companyClass: string;
+  dateClass: string;
+  skillsRenderer: (skills: string[]) => ReactNode;
+  educationRowClass?: string;
+  experienceRowClass?: string;
+  omitEducation?: boolean;
+  omitSkills?: boolean;
+  minimalist?: boolean;
+  executive?: boolean;
+  tech?: boolean;
+};
+
+function ResumeBody({
+  data,
+  skills,
+  headingClass,
+  bodyTextClass,
+  companyClass,
+  dateClass,
+  skillsRenderer,
+  educationRowClass,
+  experienceRowClass,
+  omitEducation,
+  omitSkills,
+  minimalist,
+  executive,
+  tech,
+}: ResumeBodyProps) {
+  return (
+    <div className="flex-1 space-y-7 overflow-hidden">
+      {data.personalInfo.summary && (
+        <section>
+          <h2 className={headingClass}>{minimalist ? "Profile" : "Professional Summary"}</h2>
+          <p className={bodyTextClass}>{data.personalInfo.summary}</p>
+        </section>
+      )}
+
+      {data.experience.length > 0 && (
+        <section>
+          <h2 className={headingClass}>Experience</h2>
+          <div className="space-y-5">
+            {data.experience.map((exp) => (
+              <div key={exp.id} className={experienceRowClass}>
+                {minimalist && (
+                  <div className="text-xs font-bold uppercase tracking-[0.2em] text-stone-400">
+                    {exp.startDate} - {exp.endDate || "Present"}
+                  </div>
+                )}
+                <div>
+                  <div className="mb-1 flex items-start justify-between gap-4">
+                    <h3 className={`text-base font-bold ${executive ? "text-slate-900" : tech ? "text-slate-900" : "text-slate-900"}`}>
+                      {exp.title}
+                    </h3>
+                    {!minimalist && <span className={dateClass}>{exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}</span>}
+                  </div>
+                  <div className={companyClass}>{exp.company}</div>
+                  <div className={`${bodyTextClass} whitespace-pre-wrap ${tech ? "border-l-2 border-emerald-200 pl-4" : ""}`}>
+                    {exp.description}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!omitEducation && data.education.length > 0 && (
+        <section>
+          <h2 className={headingClass}>Education</h2>
+          <div className="space-y-4">
+            {data.education.map((edu) => (
+              <div key={edu.id} className={educationRowClass ?? "flex items-start justify-between gap-4"}>
+                {minimalist && <div className="text-xs font-bold uppercase tracking-[0.2em] text-stone-400">{edu.year}</div>}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
+                  <div className={companyClass}>{edu.school}</div>
+                </div>
+                {!minimalist && <span className={dateClass}>{edu.year}</span>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!omitSkills && skills.length > 0 && (
+        <section>
+          <h2 className={headingClass}>Skills</h2>
+          {skillsRenderer(skills)}
+        </section>
+      )}
     </div>
   );
 }

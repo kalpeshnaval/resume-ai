@@ -81,7 +81,9 @@ Instructions:
 - Infer the strongest achievements, skills, and domain fit from the resume instead of inventing random facts.
 - Keep the letter natural, specific, and modern.
 - Avoid placeholders like [Your Name], [Company], or generic filler.
-- Keep it to roughly 250-400 words.
+- Never output bracketed placeholders such as [Current Date], [Hiring Manager], [Company Address], or similar.
+- If a detail like company address is unknown, omit it naturally instead of writing a placeholder.
+- Keep it to roughly 220-320 words so it fits on a single polished cover-letter page.
 - Return plain text only with normal paragraph breaks. No markdown, no bullet points, no code fences.`,
   ];
 

@@ -4,7 +4,8 @@ import { useState, type ChangeEvent } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { Building2, Download, FileText, Loader2, MapPin, Sparkles, Upload } from "lucide-react";
 
-import { exportTextToPdf } from "@/lib/pdf";
+import CoverLetterPreview, { type CoverLetterTemplate } from "@/components/CoverLetterPreview";
+import { exportElementToPdf } from "@/lib/pdf";
 
 type ResumeReferenceFile = {
   name: string;
@@ -39,6 +40,7 @@ export default function CoverLetterPage() {
   const [companyAddress, setCompanyAddress] = useState("");
   const [userContext, setUserContext] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
+  const [template, setTemplate] = useState<CoverLetterTemplate>("classic");
   const [resumeFile, setResumeFile] = useState<ResumeReferenceFile | null>(null);
   const [resumeUploadError, setResumeUploadError] = useState("");
 
@@ -78,11 +80,12 @@ export default function CoverLetterPage() {
       return;
     }
 
-    if (!generatedContent) return;
+    const element = document.getElementById("letter-preview");
+    if (!generatedContent || !element) return;
 
     try {
-      exportTextToPdf({
-        text: generatedContent,
+      await exportElementToPdf({
+        element,
         fileName: `${companyName || "Company"}_Cover_Letter.pdf`,
       });
     } catch (error) {
@@ -200,6 +203,29 @@ export default function CoverLetterPage() {
                 )}
               </div>
 
+              <div className="space-y-3 rounded-2xl border border-border bg-accent/20 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Letter Template
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["classic", "modern", "minimal", "executive", "editorial", "midnight"] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setTemplate(option)}
+                      className={`rounded-xl border px-3 py-3 text-left text-sm font-semibold capitalize transition-colors ${
+                        template === option
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating || !companyName.trim()}
@@ -238,12 +264,7 @@ export default function CoverLetterPage() {
                 </div>
 
                 <div className="flex justify-start overflow-x-auto pb-4 sm:justify-center">
-                  <div
-                    id="letter-preview"
-                    className="min-h-[1123px] w-[794px] rounded-sm bg-white px-8 py-10 font-serif text-[15px] leading-7 text-black shadow-2xl sm:px-12 sm:py-12 md:px-16 md:py-14"
-                  >
-                    <p className="whitespace-pre-wrap">{generatedContent}</p>
-                  </div>
+                  <CoverLetterPreview content={generatedContent} template={template} />
                 </div>
               </div>
             ) : (

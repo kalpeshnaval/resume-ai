@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { SignInButton, UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-import { Menu, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Suspense } from "react";
+import MobileNavMenu from "@/components/MobileNavMenu";
 
 export default function Navbar() {
   return (
@@ -61,44 +62,7 @@ async function NavbarActions() {
         )}
       </div>
 
-      <details className="relative md:hidden">
-        <summary className="flex list-none cursor-pointer items-center justify-center rounded-xl border border-foreground/10 bg-card p-2 text-foreground/80 transition-colors hover:text-foreground">
-          <Menu className="h-5 w-5" />
-        </summary>
-        <div className="absolute right-0 top-12 min-w-52 rounded-2xl border border-border bg-card p-3 shadow-2xl">
-          <div className="flex flex-col gap-2">
-            {userId ? (
-              <>
-                <Link href="/dashboard" className="rounded-xl px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground">
-                  Dashboard
-                </Link>
-                <Link href="/builder" className="rounded-xl px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground">
-                  Builder
-                </Link>
-                <Link href="/cover-letter" className="rounded-xl px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground">
-                  AI Cover Letter
-                </Link>
-                <div className="px-3 pt-1">
-                  <UserButton />
-                </div>
-              </>
-            ) : (
-              <>
-                <SignInButton mode="modal">
-                  <button className="rounded-xl px-3 py-2 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignInButton mode="modal">
-                  <button className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20">
-                    Get Started
-                  </button>
-                </SignInButton>
-              </>
-            )}
-          </div>
-        </div>
-      </details>
+      <MobileNavMenu isSignedIn={!!userId} />
     </>
   );
 }
