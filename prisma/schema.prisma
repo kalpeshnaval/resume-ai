@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String        @id @default(cuid())
+  clerkUserId      String        @unique
+  email            String        @unique
+  name             String?
+  imageUrl         String?
+  isPremium        Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  resumes          Resume[]
+  coverLetters     CoverLetter[]
+}
+
+model Resume {
+  id               String   @id @default(cuid())
+  title            String
+  contentJson      String   // Stores structured resume JSON
+  pdfUrl           String?  // Storage URL for generated PDF
+  isPremiumTemplate Boolean  @default(false)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model CoverLetter {
+  id               String   @id @default(cuid())
+  companyName      String
+  companyAddress   String?  // Optional for higher accuracy
+  content          String   // The AI generated cover letter content
+  pdfUrl           String?  // Storage URL for generated PDF
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
