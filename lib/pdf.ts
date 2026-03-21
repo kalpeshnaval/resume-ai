@@ -15,6 +15,45 @@ type ExportTextPdfOptions = {
 
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
+const ROW_SCAN_ALPHA_THRESHOLD = 24;
+
+function findNaturalPageBreak(
+  context: CanvasRenderingContext2D,
+  canvasWidth: number,
+  preferredRow: number,
+  minRow: number,
+  maxRow: number,
+) {
+  const startRow = Math.max(minRow, preferredRow - 140);
+  const endRow = Math.min(maxRow, preferredRow + 140);
+  let bestRow = preferredRow;
+  let bestInkScore = Number.POSITIVE_INFINITY;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (let row = startRow; row <= endRow; row += 1) {
+    const rowData = context.getImageData(0, row, canvasWidth, 1).data;
+    let inkScore = 0;
+
+    for (let index = 3; index < rowData.length; index += 4) {
+      if (rowData[index] > ROW_SCAN_ALPHA_THRESHOLD) {
+        inkScore += 1;
+      }
+    }
+
+    const distance = Math.abs(preferredRow - row);
+    if (inkScore < bestInkScore || (inkScore === bestInkScore && distance < bestDistance)) {
+      bestInkScore = inkScore;
+      bestDistance = distance;
+      bestRow = row;
+
+      if (inkScore === 0 && distance <= 8) {
+        break;
+      }
+    }
+  }
+
+  return Math.max(minRow, Math.min(bestRow, maxRow));
+}
 
 export async function exportElementToPdf({ element, fileName }: ExportPdfOptions) {
   const pixelRatio = Math.min(window.devicePixelRatio || 1.5, 2);
@@ -94,13 +133,34 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
 
     const pdf = new jsPDF("p", "mm", "a4");
     const sourceSliceHeight = Math.floor((canvas.width * A4_HEIGHT_MM) / A4_WIDTH_MM);
+    const canvasContext = canvas.getContext("2d");
+
+    if (!canvasContext) {
+      throw new Error("Unable to read rendered PDF canvas.");
+    }
 
     let offsetY = 0;
     let pageIndex = 0;
 
     while (offsetY < canvas.height) {
       const remainingHeight = canvas.height - offsetY;
-      const currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
+      let currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
+
+      if (remainingHeight > sourceSliceHeight) {
+        const preferredBreak = offsetY + currentSliceHeight;
+        const minBreak = Math.max(offsetY + Math.floor(sourceSliceHeight * 0.82), offsetY + 120);
+        const maxBreak = Math.min(offsetY + Math.floor(sourceSliceHeight * 0.98), canvas.height - 1);
+        const adjustedBreak = findNaturalPageBreak(
+          canvasContext,
+          canvas.width,
+          preferredBreak,
+          minBreak,
+          maxBreak,
+        );
+
+        currentSliceHeight = adjustedBreak - offsetY;
+      }
+
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = canvas.width;
       pageCanvas.height = currentSliceHeight;
