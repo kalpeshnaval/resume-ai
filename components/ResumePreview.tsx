@@ -8,12 +8,10 @@ type Props = {
   template?: ResumeTemplate;
 };
 
-const OUTER_PAGE_PADDING = "p-[28px]";
-
 function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
   return (
-    <div className={`mx-auto flex h-[1123px] w-[794px] overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone} ${OUTER_PAGE_PADDING}`}>
-      <div className={`flex h-full w-full flex-col overflow-hidden rounded-[6px] border ${frameTone}`}>
+    <div className={`mx-auto flex h-[1123px] w-[794px] overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone}`}>
+      <div className={`flex h-full w-full flex-col overflow-hidden ${frameTone}`}>
         {content}
       </div>
     </div>

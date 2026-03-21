@@ -39,6 +39,7 @@ export default function BuilderPage() {
   const mobilePreviewScale = 0.32;
   const mobilePreviewWidth = 794 * mobilePreviewScale;
   const mobilePreviewHeight = 1123 * mobilePreviewScale;
+  const mobileZoomScale = 0.62;
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<ResumeData>(initialData);
@@ -49,6 +50,7 @@ export default function BuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isPreviewZoomOpen, setIsPreviewZoomOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai"; content: string }>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -534,7 +536,9 @@ export default function BuilderPage() {
         )}
 
         <div className="flex w-full justify-center overflow-hidden pb-2 md:hidden">
-          <div
+          <button
+            type="button"
+            onClick={() => setIsPreviewZoomOpen(true)}
             className="relative overflow-hidden rounded-md shadow-[0_16px_40px_rgba(15,23,42,0.2)]"
             style={{
               width: `${mobilePreviewWidth}px`,
@@ -547,7 +551,7 @@ export default function BuilderPage() {
             >
               <ResumePreview data={data} template={template} />
             </div>
-          </div>
+          </button>
         </div>
 
         <div className="hidden w-full items-start justify-center overflow-x-auto overflow-y-hidden pb-2 md:mt-[-64px] md:flex md:flex-1 md:overflow-y-auto md:pb-20 md:pt-16">
@@ -647,6 +651,45 @@ export default function BuilderPage() {
               <Send className="h-4 w-4" />
             </button>
           </form>
+        </div>
+      )}
+
+      {isPreviewZoomOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm md:hidden">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 text-white">
+            <div>
+              <div className="text-lg font-semibold">Resume Preview</div>
+              <div className="text-xs text-white/60">Tap outside or use close to return.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPreviewZoomOpen(false)}
+              className="rounded-xl border border-white/15 bg-white/5 p-2"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            aria-label="Close zoomed preview"
+            onClick={() => setIsPreviewZoomOpen(false)}
+            className="block h-[calc(100vh-73px)] w-full overflow-auto px-4 py-6"
+          >
+            <div
+              className="relative mx-auto overflow-hidden rounded-lg shadow-[0_24px_60px_rgba(15,23,42,0.35)]"
+              style={{
+                width: `${794 * mobileZoomScale}px`,
+                height: `${1123 * mobileZoomScale}px`,
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 origin-top-left"
+                style={{ transform: `scale(${mobileZoomScale})` }}
+              >
+                <ResumePreview data={data} template={template} />
+              </div>
+            </div>
+          </button>
         </div>
       )}
     </main>
