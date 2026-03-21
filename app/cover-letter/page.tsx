@@ -123,7 +123,7 @@ export default function CoverLetterPage() {
   };
 
   return (
-    <main className="flex-1 container mx-auto max-w-6xl px-4 py-12">
+    <main className="container mx-auto flex-1 max-w-6xl px-4 py-8 sm:py-12">
       <div className="flex flex-col gap-8 md:flex-row">
         <div className="w-full space-y-6 md:w-1/3">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -226,29 +226,29 @@ export default function CoverLetterPage() {
         </div>
 
         <div className="w-full md:w-2/3">
-          <div className="flex min-h-[700px] flex-col items-center rounded-2xl bg-accent/50 p-8">
+          <div className="flex min-h-[420px] flex-col items-center rounded-2xl bg-accent/50 p-4 sm:min-h-[520px] sm:p-6 md:min-h-[700px] md:p-8">
             {generatedContent ? (
               <div className="animate-in w-full space-y-6 fade-in zoom-in-95 duration-500">
-                <div className="no-print mb-4 flex justify-end gap-3">
+                <div className="no-print mb-4 flex justify-center gap-3 sm:justify-end">
                   <button
                     onClick={handleDownload}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-900 shadow-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-900 shadow-sm transition-colors hover:bg-slate-100 sm:w-auto"
                   >
                     <Download className="h-4 w-4" /> Download PDF
                   </button>
                 </div>
 
-                <div className="flex justify-center overflow-x-auto pb-4">
+                <div className="flex justify-start overflow-x-auto pb-4 sm:justify-center">
                   <div
                     id="letter-preview"
-                    className="w-[794px] min-h-[1123px] rounded-sm bg-white px-16 py-14 font-serif text-[15px] leading-7 text-black shadow-2xl"
+                    className="min-h-[1123px] w-[794px] rounded-sm bg-white px-8 py-10 font-serif text-[15px] leading-7 text-black shadow-2xl sm:px-12 sm:py-12 md:px-16 md:py-14"
                   >
                     <p className="whitespace-pre-wrap">{generatedContent}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 py-32 text-center">
+              <div className="space-y-4 py-20 text-center sm:py-24 md:py-32">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <FileText className="h-10 w-10" />
                 </div>

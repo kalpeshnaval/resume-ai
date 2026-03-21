@@ -89,17 +89,17 @@ async function DashboardContent() {
   });
 
   return (
-    <main className="flex-1 container mx-auto px-4 py-12 max-w-6xl">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+    <main className="container mx-auto flex-1 max-w-6xl px-4 py-8 sm:py-12">
+      <div className="mb-10 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {dbUser.name || "User"}</h1>
-          <p className="text-foreground/60 mt-2">Manage your resumes and cover letters here.</p>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {dbUser.name || "User"}</h1>
+          <p className="mt-2 text-sm text-foreground/60 sm:text-base">Manage your resumes and cover letters here.</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center gap-3 md:w-auto">
           <Link 
             href="/builder" 
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium shadow hover:bg-primary/90 transition-all flex items-center gap-2"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 sm:text-base md:w-auto"
           >
             <Plus className="w-4 h-4" /> Create New Resume
           </Link>
@@ -109,7 +109,7 @@ async function DashboardContent() {
       <h2 className="text-xl font-semibold mb-6">Your Resumes</h2>
       
       {resumes.length === 0 ? (
-        <div className="bg-card border border-border border-dashed rounded-2xl p-12 text-center flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card p-8 text-center sm:p-12">
           <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
             <FileText className="w-8 h-8 text-primary" />
           </div>
@@ -119,16 +119,16 @@ async function DashboardContent() {
           </p>
           <Link 
             href="/builder" 
-            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-medium shadow hover:bg-primary/90 transition-all flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground shadow transition-all hover:bg-primary/90"
           >
             <Plus className="w-4 h-4" /> Build Resume
           </Link>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {resumes.map((resume) => (
             <div key={resume.id} className="overflow-hidden rounded-2xl border border-border bg-card/95 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg group relative">
-              <div className="mb-4 h-56 w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
+              <div className="mb-4 h-48 w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 sm:h-56">
                 <ResumeCardPreview resume={resume} />
               </div>
               <h3 className="truncate pr-8 text-base font-semibold">{resume.title}</h3>
@@ -136,7 +136,7 @@ async function DashboardContent() {
                 Updated {new Date(resume.updatedAt).toLocaleDateString()}
               </p>
 
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Link
                   href={`/builder?resumeId=${resume.id}`}
                   className="inline-flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
@@ -156,7 +156,7 @@ async function DashboardContent() {
 
 function DashboardSkeleton() {
   return (
-    <main className="flex-1 container mx-auto px-4 py-12 max-w-6xl">
+    <main className="container mx-auto flex-1 max-w-6xl px-4 py-8 sm:py-12">
       <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-3">
           <div className="h-10 w-72 rounded-xl bg-muted/60" />

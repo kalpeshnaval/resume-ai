@@ -15,7 +15,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative w-full py-24 md:py-32 lg:py-40 flex flex-col items-center text-center px-4">
         {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[90px] pointer-events-none sm:h-[420px] sm:w-[420px] md:h-[500px] md:w-[800px] md:blur-[120px]" />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -31,7 +31,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl mb-6 text-foreground"
+          className="mb-6 max-w-4xl text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-7xl"
         >
           Craft your perfect resume in <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">minutes</span>
         </motion.h1>
@@ -40,7 +40,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg md:text-xl text-foreground/70 max-w-2xl mb-10"
+          className="mb-10 max-w-2xl text-base text-foreground/70 sm:text-lg md:text-xl"
         >
           Stand out from the crowd with polished templates and AI-generated smart content. Join thousands of job seekers landing their dream roles.
         </motion.p>
@@ -53,14 +53,14 @@ export default function Home() {
         >
           {isLoaded && !isSignedIn && (
             <SignInButton mode="modal">
-              <button className="group flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-xl shadow-primary/25 transition-all hover:scale-105 active:scale-95">
+              <button className="group flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-xl shadow-primary/25 transition-all hover:scale-105 hover:bg-primary/90 active:scale-95 sm:w-auto sm:px-8 sm:py-4 sm:text-lg">
                 Start Building Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </SignInButton>
           )}
           {isLoaded && isSignedIn && (
-            <Link href="/dashboard" className="group flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-xl shadow-primary/25 transition-all hover:scale-105 active:scale-95">
+            <Link href="/dashboard" className="group flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-xl shadow-primary/25 transition-all hover:scale-105 hover:bg-primary/90 active:scale-95 sm:w-auto sm:px-8 sm:py-4 sm:text-lg">
               Go to Dashboard
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -76,7 +76,7 @@ export default function Home() {
             <p className="text-foreground/70">Powerful features designed to get you hired faster.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid gap-6 md:grid-cols-3 md:gap-8">
             <FeatureCard 
               icon={<FileText className="w-8 h-8 text-primary" />}
               title="Modern Templates"
@@ -99,8 +99,8 @@ export default function Home() {
       {/* CTA */}
       <section className="w-full py-24 flex flex-col items-center">
         <div className="max-w-3xl text-center px-4">
-          <h2 className="text-4xl font-bold mb-6">Everything You Need, Free</h2>
-          <p className="text-lg text-foreground/70 mb-10">
+          <h2 className="mb-6 text-3xl font-bold sm:text-4xl">Everything You Need, Free</h2>
+          <p className="mb-10 text-base text-foreground/70 sm:text-lg">
             Sign in to access every template, unlimited AI generation, and personalized smart cover letters researched directly for the company you apply to.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -124,7 +124,7 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="bg-card border border-border p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all"
+      className="rounded-3xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-xl sm:p-8"
     >
       <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
         {icon}

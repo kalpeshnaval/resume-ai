@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import { ClerkProvider } from '@clerk/nextjs'
+import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
 export default function RootLayout({
@@ -20,6 +21,7 @@ export default function RootLayout({
         <body suppressHydrationWarning className="min-h-full flex flex-col">
           <Navbar />
           {children}
+          <Footer />
         </body>
       </html>
     </ClerkProvider>

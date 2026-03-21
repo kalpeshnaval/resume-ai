@@ -247,8 +247,8 @@ export default function BuilderPage() {
   };
 
   return (
-    <main className="flex h-[calc(100vh-64px)] flex-1 flex-col overflow-hidden md:flex-row">
-      <aside className="flex h-full w-full flex-col overflow-y-auto border-r border-border bg-card md:w-1/2 lg:w-[45%]">
+    <main className="flex min-h-[calc(100vh-64px)] flex-1 flex-col bg-accent/20 md:h-[calc(100vh-64px)] md:flex-row md:overflow-hidden">
+      <aside className="flex w-full flex-col overflow-y-auto border-b border-border bg-card md:h-full md:w-1/2 md:border-b-0 md:border-r lg:w-[45%]">
         <div className="sticky top-0 z-10 border-b border-border bg-background p-4">
           <h1 className="text-2xl font-bold">Resume Builder</h1>
           <p className="text-sm text-foreground/60">Fill in your details below to generate.</p>
@@ -260,10 +260,18 @@ export default function BuilderPage() {
               className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? "Saving..." : savedResumeId ? "Save Changes" : "Save Resume"}
+                {isSaving ? "Saving..." : savedResumeId ? "Save Changes" : "Save Resume"}
+              </button>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isGenerating || !isLoaded || !isSignedIn}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-50 md:hidden"
+            >
+              <UploadCloud className="h-4 w-4" />
+              {isGenerating ? "Generating..." : "Download PDF"}
             </button>
             {saveMessage && (
-              <span className="text-xs font-medium text-emerald-600">{saveMessage}</span>
+              <span className="w-full text-xs font-medium text-emerald-600 sm:w-auto">{saveMessage}</span>
             )}
           </div>
 
@@ -283,7 +291,7 @@ export default function BuilderPage() {
           </div>
         </div>
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 sm:p-6">
           {activeTab === "personal" && (
             <div className="animate-in space-y-4 fade-in slide-in-from-bottom-2">
               <h2 className="mb-4 text-xl font-semibold">Personal Information</h2>
@@ -338,13 +346,13 @@ export default function BuilderPage() {
 
               {data.experience.map((exp, index) => (
                 <div key={exp.id} className="group relative space-y-3 rounded-lg border border-border p-4">
-                  <button
-                    onClick={() => {
-                      const newExp = [...data.experience];
-                      newExp.splice(index, 1);
-                      setData({ ...data, experience: newExp });
-                    }}
-                    className="absolute right-2 top-2 text-xs font-bold text-destructive opacity-0 transition-opacity group-hover:opacity-100"
+                <button
+                  onClick={() => {
+                    const newExp = [...data.experience];
+                    newExp.splice(index, 1);
+                    setData({ ...data, experience: newExp });
+                  }}
+                    className="absolute right-2 top-2 text-xs font-bold text-destructive opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                   >
                     Remove
                   </button>
@@ -411,13 +419,13 @@ export default function BuilderPage() {
 
               {data.education.map((edu, index) => (
                 <div key={edu.id} className="group relative space-y-3 rounded-lg border border-border p-4">
-                  <button
-                    onClick={() => {
-                      const newEdu = [...data.education];
-                      newEdu.splice(index, 1);
-                      setData({ ...data, education: newEdu });
-                    }}
-                    className="absolute right-2 top-2 text-xs font-bold text-destructive opacity-0 transition-opacity group-hover:opacity-100"
+                <button
+                  onClick={() => {
+                    const newEdu = [...data.education];
+                    newEdu.splice(index, 1);
+                    setData({ ...data, education: newEdu });
+                  }}
+                    className="absolute right-2 top-2 text-xs font-bold text-destructive opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                   >
                     Remove
                   </button>
@@ -468,7 +476,7 @@ export default function BuilderPage() {
               </h2>
               <p className="mb-6 text-sm text-foreground/60">Choose the layout you want for your resume.</p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {(["standard", "modern", "minimalist", "creative", "executive", "tech"] as const).map((tmpl) => (
                   <button
                     key={tmpl}
@@ -489,12 +497,19 @@ export default function BuilderPage() {
         </div>
       </aside>
 
-      <section className="relative hidden h-full w-1/2 flex-col bg-accent px-8 py-6 md:flex lg:w-[55%]">
-        <div className="absolute right-8 top-4 z-20 flex gap-3">
+      <section className="relative order-first border-b border-border bg-accent px-4 py-4 md:order-none md:flex md:h-full md:w-1/2 md:flex-col md:border-b-0 md:px-8 md:py-6 lg:w-[55%]">
+        <div className="mb-3 flex items-center justify-between md:hidden">
+          <div>
+            <h2 className="text-lg font-semibold">Live Preview</h2>
+            <p className="text-xs text-foreground/60">Your resume updates as you edit.</p>
+          </div>
+        </div>
+
+        <div className="mb-4 flex gap-3 md:absolute md:right-8 md:top-4 md:z-20">
           <button
             onClick={handleSaveResume}
             disabled={isSaving || !isLoaded || !isSignedIn}
-            className="flex items-center gap-2 rounded-lg border border-primary/20 bg-card px-4 py-2 font-medium text-foreground shadow hover:bg-accent disabled:opacity-50"
+            className="hidden items-center gap-2 rounded-lg border border-primary/20 bg-card px-4 py-2 font-medium text-foreground shadow hover:bg-accent disabled:opacity-50 md:flex"
           >
             <Save className="h-4 w-4" />
             {isSaving ? "Saving..." : savedResumeId ? "Save Changes" : "Save Resume"}
@@ -502,7 +517,7 @@ export default function BuilderPage() {
           <button
             onClick={handleDownloadPDF}
             disabled={isGenerating || !isLoaded || !isSignedIn}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50"
+            className="hidden items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50 md:flex"
           >
             <UploadCloud className="h-4 w-4" />
             {isGenerating ? "Generating..." : "Download PDF"}
@@ -510,13 +525,13 @@ export default function BuilderPage() {
         </div>
 
         {saveMessage && (
-          <div className="absolute left-8 top-4 z-20 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 shadow-sm">
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 shadow-sm md:absolute md:left-8 md:top-4 md:z-20">
             {saveMessage}
           </div>
         )}
 
-        <div className="mt-[-64px] flex w-full flex-1 items-start justify-center overflow-y-auto pb-20 pt-16">
-          <div className="group relative origin-top scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
+        <div className="flex w-full items-start justify-center overflow-x-auto overflow-y-hidden pb-2 md:mt-[-64px] md:flex-1 md:overflow-y-auto md:pb-20 md:pt-16">
+          <div className="group relative origin-top scale-[0.32] sm:scale-[0.45] md:scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
             <ResumePreview data={data} template={template} />
           </div>
         </div>
@@ -524,7 +539,7 @@ export default function BuilderPage() {
 
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="group fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-all hover:scale-110 active:scale-95"
+        className="group fixed bottom-5 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-all hover:scale-110 active:scale-95 md:bottom-8 md:right-8"
       >
         {isChatOpen ? <X /> : <MessageSquare />}
         {!isChatOpen && (
@@ -535,7 +550,7 @@ export default function BuilderPage() {
       </button>
 
       {isChatOpen && (
-        <div className="animate-in slide-in-from-bottom-4 fade-in fixed bottom-24 right-8 z-50 flex h-[600px] max-h-[70vh] w-80 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl duration-300 md:w-96">
+        <div className="animate-in slide-in-from-bottom-4 fade-in fixed bottom-22 left-4 right-4 z-50 flex h-[70svh] max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl duration-300 md:bottom-24 md:left-auto md:right-8 md:h-[600px] md:w-96">
           <div className="flex items-center justify-between bg-primary p-4 text-primary-foreground">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
