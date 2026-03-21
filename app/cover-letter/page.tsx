@@ -95,7 +95,7 @@ export default function CoverLetterPage() {
       });
     } catch (error) {
       console.error(error);
-      alert("Failed to download PDF.");
+      alert(error instanceof Error ? error.message : "Failed to download PDF.");
     }
   };
 

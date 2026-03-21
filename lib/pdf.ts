@@ -15,17 +15,11 @@ type ExportTextPdfOptions = {
 
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const DEFAULT_PAGE_MARGIN_MM = 18;
 
 export async function exportElementToPdf({ element, fileName }: ExportPdfOptions) {
   const pixelRatio = Math.min(window.devicePixelRatio || 1.5, 2);
   const width = element.scrollWidth;
   const height = element.scrollHeight;
-  const horizontalMargin = DEFAULT_PAGE_MARGIN_MM;
-  const topMargin = 16;
-  const bottomMargin = 16;
-  const innerWidthMm = A4_WIDTH_MM - horizontalMargin * 2;
-  const innerHeightMm = A4_HEIGHT_MM - topMargin - bottomMargin;
 
   const clone = element.cloneNode(true) as HTMLElement;
   const wrapper = document.createElement("div");
@@ -42,72 +36,78 @@ export async function exportElementToPdf({ element, fileName }: ExportPdfOptions
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
 
-  const canvas = await toCanvas(clone, {
-    backgroundColor: "#ffffff",
-    cacheBust: true,
-    pixelRatio,
-    skipAutoScale: true,
-    width,
-    height,
-    canvasWidth: width * pixelRatio,
-    canvasHeight: height * pixelRatio,
-    style: {
-      transform: "none",
-      transformOrigin: "top left",
-    },
-  });
-  document.body.removeChild(wrapper);
+  try {
+    const canvas = await toCanvas(clone, {
+      backgroundColor: "#ffffff",
+      cacheBust: true,
+      pixelRatio,
+      skipAutoScale: true,
+      width,
+      height,
+      canvasWidth: width * pixelRatio,
+      canvasHeight: height * pixelRatio,
+      style: {
+        transform: "none",
+        transformOrigin: "top left",
+        boxShadow: "none",
+        border: "none",
+        borderRadius: "0",
+      },
+    });
 
-  const pdf = new jsPDF("p", "mm", "a4");
-  const sourceSliceHeight = Math.floor((canvas.width * innerHeightMm) / innerWidthMm);
+    const pdf = new jsPDF("p", "mm", "a4");
+    const sourceSliceHeight = Math.floor((canvas.width * A4_HEIGHT_MM) / A4_WIDTH_MM);
 
-  let offsetY = 0;
-  let pageIndex = 0;
+    let offsetY = 0;
+    let pageIndex = 0;
 
-  while (offsetY < canvas.height) {
-    const remainingHeight = canvas.height - offsetY;
-    const currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
-    const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = canvas.width;
-    pageCanvas.height = currentSliceHeight;
+    while (offsetY < canvas.height) {
+      const remainingHeight = canvas.height - offsetY;
+      const currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = currentSliceHeight;
 
-    const context = pageCanvas.getContext("2d");
-    if (!context) {
-      throw new Error("Unable to create PDF page canvas.");
+      const context = pageCanvas.getContext("2d");
+      if (!context) {
+        throw new Error("Unable to create PDF page canvas.");
+      }
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      context.drawImage(
+        canvas,
+        0,
+        offsetY,
+        canvas.width,
+        currentSliceHeight,
+        0,
+        0,
+        pageCanvas.width,
+        pageCanvas.height,
+      );
+
+      const pageDataUrl = pageCanvas.toDataURL("image/png");
+      const renderedHeight = (currentSliceHeight * A4_WIDTH_MM) / canvas.width;
+
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
+
+      pdf.addImage(pageDataUrl, "PNG", 0, 0, A4_WIDTH_MM, renderedHeight, undefined, "FAST");
+      offsetY += currentSliceHeight;
+      pageIndex += 1;
     }
 
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-    context.drawImage(
-      canvas,
-      0,
-      offsetY,
-      canvas.width,
-      currentSliceHeight,
-      0,
-      0,
-      pageCanvas.width,
-      pageCanvas.height,
-    );
-
-    const pageDataUrl = pageCanvas.toDataURL("image/png");
-    const renderedHeight = (currentSliceHeight * innerWidthMm) / canvas.width;
-
-    if (pageIndex > 0) {
-      pdf.addPage();
-    }
-
-    pdf.addImage(pageDataUrl, "PNG", horizontalMargin, topMargin, innerWidthMm, renderedHeight, undefined, "FAST");
-    offsetY += currentSliceHeight;
-    pageIndex += 1;
+    pdf.save(fileName);
+  } finally {
+    document.body.removeChild(wrapper);
   }
-
-  pdf.save(fileName);
 }
 
 export function exportTextToPdf({ text, fileName }: ExportTextPdfOptions) {
   const pdf = new jsPDF("p", "mm", "a4");
-  const horizontalMargin = DEFAULT_PAGE_MARGIN_MM;
+  const horizontalMargin = 18;
   const topMargin = 20;
   const bottomMargin = 20;
   const maxWidth = A4_WIDTH_MM - horizontalMargin * 2;

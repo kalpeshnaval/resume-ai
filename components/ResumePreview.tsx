@@ -10,7 +10,7 @@ type Props = {
 
 function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
   return (
-    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${pageTone} ${frameTone}`}>
+    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden ${pageTone} ${frameTone}`}>
       {content}
     </div>
   );
