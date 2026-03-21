@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import type { Resume } from "@prisma/client";
 import Link from "next/link";
 import { FileText, PencilLine, Plus, Trash2 } from "lucide-react";
+import { Suspense } from "react";
 
 import ResumePreview from "@/components/ResumePreview";
 import { getOrCreateCurrentDbUser } from "@/lib/db-user";
@@ -53,7 +53,22 @@ const emptyResumeData: ResumeData = {
   skills: "",
 };
 
-export default async function DashboardPage() {
+type ResumeRecord = {
+  id: string;
+  title: string;
+  contentJson: string;
+  updatedAt: Date;
+};
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+async function DashboardContent() {
   const { userId } = await auth();
 
   if (!userId) {
@@ -111,7 +126,7 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {resumes.map((resume: Resume) => (
+          {resumes.map((resume) => (
             <div key={resume.id} className="overflow-hidden rounded-2xl border border-border bg-card/95 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg group relative">
               <div className="mb-4 h-56 w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
                 <ResumeCardPreview resume={resume} />
@@ -139,7 +154,35 @@ export default async function DashboardPage() {
   );
 }
 
-function ResumeCardPreview({ resume }: { resume: Resume }) {
+function DashboardSkeleton() {
+  return (
+    <main className="flex-1 container mx-auto px-4 py-12 max-w-6xl">
+      <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-3">
+          <div className="h-10 w-72 rounded-xl bg-muted/60" />
+          <div className="h-5 w-80 rounded-lg bg-muted/40" />
+        </div>
+        <div className="h-11 w-48 rounded-xl bg-muted/50" />
+      </div>
+      <div className="mb-6 h-7 w-36 rounded-lg bg-muted/50" />
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="overflow-hidden rounded-2xl border border-border bg-card/95 p-4">
+            <div className="mb-4 h-56 w-full rounded-xl bg-muted/40" />
+            <div className="h-6 w-40 rounded-md bg-muted/50" />
+            <div className="mt-2 h-4 w-28 rounded-md bg-muted/35" />
+            <div className="mt-4 flex gap-2">
+              <div className="h-9 w-20 rounded-md bg-muted/45" />
+              <div className="h-9 w-24 rounded-md bg-muted/35" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+function ResumeCardPreview({ resume }: { resume: ResumeRecord }) {
   const parsedResume = parseResumeContent(resume.contentJson);
   const previewScale = 0.16;
   const previewWidth = 794 * previewScale;
