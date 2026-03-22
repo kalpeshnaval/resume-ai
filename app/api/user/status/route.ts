@@ -1,11 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
-import { connection, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { getOrCreateCurrentDbUser } from "@/lib/db-user";
 
 export async function GET() {
   try {
-    await connection();
     const { userId } = await auth();
     const user = await getOrCreateCurrentDbUser();
 
@@ -16,8 +15,7 @@ export async function GET() {
   } catch (error) {
     if (
       error instanceof Error &&
-      error.message.includes("During prerendering") &&
-      error.message.includes("headers()")
+      error.message.includes("During prerendering")
     ) {
       return NextResponse.json({ isSignedIn: false, hasAccount: false }, { status: 200 });
     }
