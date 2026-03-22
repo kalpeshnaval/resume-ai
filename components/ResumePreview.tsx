@@ -10,7 +10,7 @@ type Props = {
 
 function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
   return (
-    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden ${pageTone} ${frameTone}`}>
+    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden ${frameTone}`}>
       {content}
     </div>
   );
@@ -386,6 +386,24 @@ function ResumeBody({
                     {exp.description}
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {data.projects.length > 0 && (
+        <section>
+          <h2 className={headingClass}>Projects</h2>
+          <div className="space-y-5">
+            {data.projects.map((project) => (
+              <div key={project.id}>
+                <div className="mb-1 flex items-start justify-between gap-4">
+                  <h3 className="text-base font-bold text-slate-900">{project.name}</h3>
+                  {project.link && <span className={dateClass}>{project.link}</span>}
+                </div>
+                {project.techStack && <div className={companyClass}>{project.techStack}</div>}
+                <div className={bodyTextClass}>{project.description}</div>
               </div>
             ))}
           </div>

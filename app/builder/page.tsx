@@ -17,6 +17,7 @@ export type ResumeData = {
     summary: string;
   };
   experience: Array<{ id: string; title: string; company: string; startDate: string; endDate: string; description: string }>;
+  projects: Array<{ id: string; name: string; techStack: string; link: string; description: string }>;
   education: Array<{ id: string; degree: string; school: string; year: string }>;
   skills: string;
 };
@@ -37,6 +38,7 @@ type ResumeReferenceFile = {
 const initialData: ResumeData = {
   personalInfo: { fullName: "", email: "", phone: "", location: "", summary: "" },
   experience: [],
+  projects: [],
   education: [],
   skills: "",
 };
@@ -49,6 +51,19 @@ const resumePageBackgrounds: Record<TemplateType, string> = {
   executive: "#fcfbf8",
   tech: "#f3fbf8",
 };
+
+function normalizeResumeData(data: Partial<ResumeData> | undefined): ResumeData {
+  return {
+    personalInfo: {
+      ...initialData.personalInfo,
+      ...(data?.personalInfo ?? {}),
+    },
+    experience: Array.isArray(data?.experience) ? data.experience : [],
+    projects: Array.isArray(data?.projects) ? data.projects : [],
+    education: Array.isArray(data?.education) ? data.education : [],
+    skills: typeof data?.skills === "string" ? data.skills : "",
+  };
+}
 
 async function readFileAsBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -78,7 +93,7 @@ export default function BuilderPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<ResumeData>(initialData);
-  const [activeTab, setActiveTab] = useState<"personal" | "experience" | "education" | "skills" | "template">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "experience" | "projects" | "education" | "skills" | "template">("personal");
   const [isGenerating, setIsGenerating] = useState(false);
   const [template, setTemplate] = useState<TemplateType>("standard");
   const [savedResumeId, setSavedResumeId] = useState<string | null>(null);
@@ -133,7 +148,7 @@ export default function BuilderPage() {
         const storedData = "data" in parsed ? parsed.data : parsed;
         const storedTemplate = "template" in parsed ? parsed.template : "standard";
 
-        setData(storedData);
+        setData(normalizeResumeData(storedData));
         setTemplate(storedTemplate);
         setSavedResumeId(payload.resume.id);
         setSaveMessage(`Loaded "${payload.resume.title}".`);
@@ -421,7 +436,7 @@ export default function BuilderPage() {
           </div>
 
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-            {(["personal", "experience", "education", "skills", "template"] as const).map((tab) => (
+            {(["personal", "experience", "projects", "education", "skills", "template"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -592,6 +607,80 @@ export default function BuilderPage() {
                       const newEdu = [...data.education];
                       newEdu[index].school = e.target.value;
                       setData({ ...data, education: newEdu });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "projects" && (
+            <div className="animate-in space-y-4 fade-in slide-in-from-bottom-2">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Projects</h2>
+                <button
+                  onClick={() => setData({
+                    ...data,
+                    projects: [...data.projects, { id: Date.now().toString(), name: "", techStack: "", link: "", description: "" }],
+                  })}
+                  className="rounded-md bg-primary/10 px-3 py-1 text-sm text-primary hover:bg-primary/20"
+                >
+                  + Add Project
+                </button>
+              </div>
+
+              {data.projects.length === 0 && <p className="text-sm text-foreground/50">No projects added yet.</p>}
+
+              {data.projects.map((project, index) => (
+                <div key={project.id} className="group relative space-y-3 rounded-lg border border-border p-4">
+                  <button
+                    onClick={() => {
+                      const newProjects = [...data.projects];
+                      newProjects.splice(index, 1);
+                      setData({ ...data, projects: newProjects });
+                    }}
+                    className="absolute right-2 top-2 text-xs font-bold text-destructive opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                  >
+                    Remove
+                  </button>
+                  <input
+                    placeholder="Project Name"
+                    className="w-full border-b border-border bg-transparent p-2 text-sm focus:border-primary focus:outline-none"
+                    value={project.name}
+                    onChange={(e) => {
+                      const newProjects = [...data.projects];
+                      newProjects[index].name = e.target.value;
+                      setData({ ...data, projects: newProjects });
+                    }}
+                  />
+                  <input
+                    placeholder="Tech Stack"
+                    className="w-full border-b border-border bg-transparent p-2 text-sm focus:border-primary focus:outline-none"
+                    value={project.techStack}
+                    onChange={(e) => {
+                      const newProjects = [...data.projects];
+                      newProjects[index].techStack = e.target.value;
+                      setData({ ...data, projects: newProjects });
+                    }}
+                  />
+                  <input
+                    placeholder="Project Link (optional)"
+                    className="w-full border-b border-border bg-transparent p-2 text-sm focus:border-primary focus:outline-none"
+                    value={project.link}
+                    onChange={(e) => {
+                      const newProjects = [...data.projects];
+                      newProjects[index].link = e.target.value;
+                      setData({ ...data, projects: newProjects });
+                    }}
+                  />
+                  <textarea
+                    placeholder="Describe the project, your impact, and major features..."
+                    className="min-h-[90px] w-full rounded-md border border-border bg-transparent p-2 text-sm focus:border-primary focus:outline-none"
+                    value={project.description}
+                    onChange={(e) => {
+                      const newProjects = [...data.projects];
+                      newProjects[index].description = e.target.value;
+                      setData({ ...data, projects: newProjects });
                     }}
                   />
                 </div>

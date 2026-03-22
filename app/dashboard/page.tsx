@@ -28,6 +28,13 @@ type ResumeData = {
     endDate: string;
     description: string;
   }>;
+  projects: Array<{
+    id: string;
+    name: string;
+    techStack: string;
+    link: string;
+    description: string;
+  }>;
   education: Array<{
     id: string;
     school: string;
@@ -51,6 +58,7 @@ const emptyResumeData: ResumeData = {
     summary: "",
   },
   experience: [],
+  projects: [],
   education: [],
   skills: "",
 };
@@ -246,6 +254,7 @@ function normalizeResumeData(data: Partial<ResumeData> | undefined): ResumeData 
       ...(data?.personalInfo ?? {}),
     },
     experience: Array.isArray(data?.experience) ? data.experience : [],
+    projects: Array.isArray(data?.projects) ? data.projects : [],
     education: Array.isArray(data?.education) ? data.education : [],
     skills: typeof data?.skills === "string" ? data.skills : "",
   };

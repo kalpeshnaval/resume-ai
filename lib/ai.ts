@@ -66,6 +66,13 @@ function normalizeResumeData(data: ResumeData) {
       endDate: item.endDate ?? "",
       description: item.description ?? "",
     })),
+    projects: (data.projects ?? []).map((item, index) => ({
+      id: item.id?.trim() || `proj-${index + 1}`,
+      name: item.name ?? "",
+      techStack: item.techStack ?? "",
+      link: item.link ?? "",
+      description: item.description ?? "",
+    })),
     education: (data.education ?? []).map((item, index) => ({
       id: item.id?.trim() || `edu-${index + 1}`,
       degree: item.degree ?? "",
@@ -184,6 +191,15 @@ export async function chatWithAI(instructions: string, currentResumeData: Resume
           "description": "string"
         }
       ],
+      "projects": [
+        {
+          "id": "string",
+          "name": "string",
+          "techStack": "string",
+          "link": "string",
+          "description": "string"
+        }
+      ],
       "education": [
         {
           "id": "string",
@@ -246,19 +262,28 @@ Extract the candidate information from the uploaded resume and return valid JSON
       "location": "string",
       "summary": "string"
     },
-    "experience": [
-      {
-        "id": "string",
-        "title": "string",
-        "company": "string",
-        "startDate": "string",
-        "endDate": "string",
-        "description": "string"
-      }
-    ],
-    "education": [
-      {
-        "id": "string",
+      "experience": [
+        {
+          "id": "string",
+          "title": "string",
+          "company": "string",
+          "startDate": "string",
+          "endDate": "string",
+          "description": "string"
+        }
+      ],
+      "projects": [
+        {
+          "id": "string",
+          "name": "string",
+          "techStack": "string",
+          "link": "string",
+          "description": "string"
+        }
+      ],
+      "education": [
+        {
+          "id": "string",
         "degree": "string",
         "school": "string",
         "year": "string"
@@ -273,8 +298,9 @@ Rules:
 - Keep the content professional and concise.
 - If a field is missing, return an empty string.
 - Merge repeated bullet points for the same role into a readable description paragraph.
+- Extract standout projects into the projects array whenever the resume includes them.
 - Skills must be returned as a comma-separated string.
-- Give stable ids like exp-1, exp-2, edu-1, edu-2.
+- Give stable ids like exp-1, exp-2, proj-1, proj-2, edu-1, edu-2.
 - Return JSON only. Do not wrap it in markdown fences.`,
     {
       inlineData: {
