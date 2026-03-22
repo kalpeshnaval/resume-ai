@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link2 } from "lucide-react";
 
 import type { ResumeData } from "@/app/builder/page";
 
@@ -39,6 +40,71 @@ function renderSkills(skills: string) {
     .split(",")
     .map((skill) => skill.trim())
     .filter(Boolean);
+}
+
+function normalizeUrl(url: string) {
+  const trimmed = url.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
+function getLinkLabel(label: string, url: string) {
+  const trimmedLabel = label.trim();
+
+  if (trimmedLabel) {
+    return trimmedLabel;
+  }
+
+  try {
+    const parsed = new URL(normalizeUrl(url));
+    return parsed.hostname.replace(/^www\./i, "");
+  } catch {
+    return url.trim();
+  }
+}
+
+function getValidLinks(links: ResumeData["links"]) {
+  return links
+    .map((link, index) => ({
+      ...link,
+      id: link.id?.trim() || `link-${index + 1}`,
+      label: getLinkLabel(link.label, link.url),
+      href: normalizeUrl(link.url),
+    }))
+    .filter((link) => link.href);
+}
+
+function ResumeAnchor({
+  href,
+  label,
+  className,
+  iconClassName = "h-3.5 w-3.5",
+}: {
+  href: string;
+  label: string;
+  className: string;
+  iconClassName?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+      title={label}
+    >
+      <Link2 className={`${iconClassName} shrink-0`} />
+      <span>{label}</span>
+    </a>
+  );
 }
 
 export default function ResumePreview({ data, template = "standard" }: Props) {
@@ -288,12 +354,37 @@ function ResumeBody({
   executive,
   tech,
 }: ResumeBodyProps) {
+  const links = getValidLinks(data.links);
+  const linkTextClass = minimalist
+    ? "inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.18em] text-stone-500 underline underline-offset-4"
+    : executive
+      ? "inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 underline underline-offset-4"
+      : tech
+        ? "inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-emerald-700 underline underline-offset-4"
+        : "inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 underline underline-offset-4";
+
   return (
     <div className="space-y-7">
       {data.personalInfo.summary && (
         <section>
           <h2 className={headingClass}>{minimalist ? "Profile" : "Professional Summary"}</h2>
           <p className={`${bodyTextClass} whitespace-pre-wrap`}>{data.personalInfo.summary}</p>
+        </section>
+      )}
+
+      {links.length > 0 && (
+        <section>
+          <h2 className={headingClass}>Links</h2>
+          <div className="flex flex-wrap gap-3">
+            {links.map((link) => (
+              <ResumeAnchor
+                key={link.id}
+                href={link.href}
+                label={link.label}
+                className={linkTextClass}
+              />
+            ))}
+          </div>
         </section>
       )}
 
@@ -334,9 +425,17 @@ function ResumeBody({
               <div key={project.id}>
                 <div className="mb-1 flex items-start justify-between gap-4">
                   <h3 className="text-base font-bold text-slate-900">{project.name}</h3>
-                  {project.link && <span className={dateClass}>{project.link}</span>}
                 </div>
                 {project.techStack && <div className={companyClass}>{project.techStack}</div>}
+                {normalizeUrl(project.link) && (
+                  <div className="mb-2">
+                    <ResumeAnchor
+                      href={normalizeUrl(project.link)}
+                      label={getLinkLabel("", project.link)}
+                      className={linkTextClass}
+                    />
+                  </div>
+                )}
                 <div className={`${bodyTextClass} whitespace-pre-wrap`}>{project.description}</div>
               </div>
             ))}

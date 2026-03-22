@@ -58,6 +58,11 @@ function normalizeResumeData(data: ResumeData) {
       location: data.personalInfo?.location ?? "",
       summary: data.personalInfo?.summary ?? "",
     },
+    links: (data.links ?? []).map((item, index) => ({
+      id: item.id?.trim() || `link-${index + 1}`,
+      label: item.label ?? "",
+      url: item.url ?? "",
+    })),
     experience: (data.experience ?? []).map((item, index) => ({
       id: item.id?.trim() || `exp-${index + 1}`,
       title: item.title ?? "",
@@ -181,6 +186,13 @@ export async function chatWithAI(instructions: string, currentResumeData: Resume
         "location": "string",
         "summary": "string"
       },
+      "links": [
+        {
+          "id": "string",
+          "label": "string",
+          "url": "string"
+        }
+      ],
       "experience": [
         {
           "id": "string",
@@ -215,6 +227,7 @@ export async function chatWithAI(instructions: string, currentResumeData: Resume
   Rules:
   - Always return the full updatedData object, not partial fields.
   - Preserve existing information unless the user asked to replace it.
+  - Keep useful personal links such as portfolio, LinkedIn, GitHub, or demo URLs inside updatedData.links.
   - If the user asks to add content, write the new content into updatedData.
   - If the request is not resume-edit related, keep updatedData unchanged and explain that briefly in message.
   - Do not wrap the JSON in markdown fences.
@@ -262,6 +275,13 @@ Extract the candidate information from the uploaded resume and return valid JSON
       "location": "string",
       "summary": "string"
     },
+    "links": [
+      {
+        "id": "string",
+        "label": "string",
+        "url": "string"
+      }
+    ],
       "experience": [
         {
           "id": "string",
@@ -299,8 +319,9 @@ Rules:
 - If a field is missing, return an empty string.
 - Merge repeated bullet points for the same role into a readable description paragraph.
 - Extract standout projects into the projects array whenever the resume includes them.
+- Extract useful personal or professional URLs such as portfolio, LinkedIn, GitHub, or project demos into the links array.
 - Skills must be returned as a comma-separated string.
-- Give stable ids like exp-1, exp-2, proj-1, proj-2, edu-1, edu-2.
+- Give stable ids like link-1, link-2, exp-1, exp-2, proj-1, proj-2, edu-1, edu-2.
 - Return JSON only. Do not wrap it in markdown fences.`,
     {
       inlineData: {

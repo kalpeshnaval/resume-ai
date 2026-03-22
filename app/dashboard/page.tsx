@@ -20,6 +20,11 @@ type ResumeData = {
     location: string;
     summary: string;
   };
+  links: Array<{
+    id: string;
+    label: string;
+    url: string;
+  }>;
   experience: Array<{
     id: string;
     title: string;
@@ -57,6 +62,7 @@ const emptyResumeData: ResumeData = {
     location: "",
     summary: "",
   },
+  links: [],
   experience: [],
   projects: [],
   education: [],
@@ -253,6 +259,13 @@ function normalizeResumeData(data: Partial<ResumeData> | undefined): ResumeData 
       ...emptyResumeData.personalInfo,
       ...(data?.personalInfo ?? {}),
     },
+    links: Array.isArray(data?.links)
+      ? data.links.map((link, index) => ({
+          id: link.id?.trim() || `link-${index + 1}`,
+          label: typeof link.label === "string" ? link.label : "",
+          url: typeof link.url === "string" ? link.url : "",
+        }))
+      : [],
     experience: Array.isArray(data?.experience) ? data.experience : [],
     projects: Array.isArray(data?.projects) ? data.projects : [],
     education: Array.isArray(data?.education) ? data.education : [],

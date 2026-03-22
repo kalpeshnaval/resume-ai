@@ -9,6 +9,14 @@ type ExportPdfOptions = {
   backgroundColor?: string;
 };
 
+type LinkAnnotation = {
+  href: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
 type ExportTextPdfOptions = {
   text: string;
   fileName: string;
@@ -129,6 +137,25 @@ export async function exportElementToPdf({ element, fileName, backgroundColor = 
 
     const width = clone.scrollWidth || clone.clientWidth || baseWidth;
     const height = clone.scrollHeight || clone.clientHeight;
+    const cloneRect = clone.getBoundingClientRect();
+    const linkAnnotations: LinkAnnotation[] = Array.from(clone.querySelectorAll<HTMLAnchorElement>("a[href]"))
+      .map((anchor) => {
+        const href = anchor.href || anchor.getAttribute("href")?.trim() || "";
+        const rect = anchor.getBoundingClientRect();
+
+        if (!href || rect.width <= 0 || rect.height <= 0) {
+          return null;
+        }
+
+        return {
+          href,
+          left: rect.left - cloneRect.left,
+          top: rect.top - cloneRect.top,
+          width: rect.width,
+          height: rect.height,
+        };
+      })
+      .filter((link): link is LinkAnnotation => Boolean(link));
 
     const canvas = await toCanvas(clone, {
       backgroundColor,
@@ -162,6 +189,7 @@ export async function exportElementToPdf({ element, fileName, backgroundColor = 
 
     let offsetY = 0;
     let pageIndex = 0;
+    const mmPerCssPixel = A4_WIDTH_MM / width;
 
     while (offsetY < canvas.height - PAGE_BREAK_TOLERANCE_PX) {
       const topMarginMm = usesSplitPadding && pageIndex > 0 ? CONTINUED_PAGE_TOP_MM : 0;
@@ -224,6 +252,29 @@ export async function exportElementToPdf({ element, fileName, backgroundColor = 
       pdf.setFillColor(backgroundRgb.r, backgroundRgb.g, backgroundRgb.b);
       pdf.rect(0, 0, A4_WIDTH_MM, A4_HEIGHT_MM, "F");
       pdf.addImage(pageDataUrl, "PNG", 0, topMarginMm, A4_WIDTH_MM, renderedHeight, undefined, "FAST");
+
+      const pageTopCss = offsetY / pixelRatio;
+      const pageBottomCss = (offsetY + currentSliceHeight) / pixelRatio;
+
+      for (const link of linkAnnotations) {
+        const linkTop = link.top;
+        const linkBottom = link.top + link.height;
+        const visibleTop = Math.max(linkTop, pageTopCss);
+        const visibleBottom = Math.min(linkBottom, pageBottomCss);
+
+        if (visibleBottom <= visibleTop) {
+          continue;
+        }
+
+        pdf.link(
+          link.left * mmPerCssPixel,
+          topMarginMm + (visibleTop - pageTopCss) * mmPerCssPixel,
+          Math.max(link.width * mmPerCssPixel, 1),
+          Math.max((visibleBottom - visibleTop) * mmPerCssPixel, 1),
+          { url: link.href },
+        );
+      }
+
       offsetY += currentSliceHeight;
       pageIndex += 1;
     }

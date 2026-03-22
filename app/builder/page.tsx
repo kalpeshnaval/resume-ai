@@ -16,6 +16,7 @@ export type ResumeData = {
     location: string;
     summary: string;
   };
+  links: Array<{ id: string; label: string; url: string }>;
   experience: Array<{ id: string; title: string; company: string; startDate: string; endDate: string; description: string }>;
   projects: Array<{ id: string; name: string; techStack: string; link: string; description: string }>;
   education: Array<{ id: string; degree: string; school: string; year: string }>;
@@ -37,6 +38,7 @@ type ResumeReferenceFile = {
 
 const initialData: ResumeData = {
   personalInfo: { fullName: "", email: "", phone: "", location: "", summary: "" },
+  links: [],
   experience: [],
   projects: [],
   education: [],
@@ -58,6 +60,13 @@ function normalizeResumeData(data: Partial<ResumeData> | undefined): ResumeData 
       ...initialData.personalInfo,
       ...(data?.personalInfo ?? {}),
     },
+    links: Array.isArray(data?.links)
+      ? data.links.map((link, index) => ({
+          id: link.id?.trim() || `link-${index + 1}`,
+          label: typeof link.label === "string" ? link.label : "",
+          url: typeof link.url === "string" ? link.url : "",
+        }))
+      : [],
     experience: Array.isArray(data?.experience) ? data.experience : [],
     projects: Array.isArray(data?.projects) ? data.projects : [],
     education: Array.isArray(data?.education) ? data.education : [],
@@ -92,7 +101,7 @@ export default function BuilderPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<ResumeData>(initialData);
-  const [activeTab, setActiveTab] = useState<"personal" | "experience" | "projects" | "education" | "skills" | "template">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "links" | "experience" | "projects" | "education" | "skills" | "template">("personal");
   const [isGenerating, setIsGenerating] = useState(false);
   const [template, setTemplate] = useState<TemplateType>("standard");
   const [savedResumeId, setSavedResumeId] = useState<string | null>(null);
@@ -381,7 +390,7 @@ export default function BuilderPage() {
         throw new Error(payload.error || "Failed to import resume.");
       }
 
-      setData(payload.updatedData);
+      setData(normalizeResumeData(payload.updatedData));
       setSaveMessage(payload.message || `Imported resume data from ${file.name}.`);
       setChatHistory((prev) => [
         ...prev,
@@ -419,7 +428,7 @@ export default function BuilderPage() {
       if (res.ok) {
         const { message: aiMessage, updatedData } = await res.json();
         if (updatedData) {
-          setData(updatedData);
+          setData(normalizeResumeData(updatedData));
         }
         setChatHistory((prev) => [...prev, { role: "ai", content: aiMessage || "Updated your resume." }]);
       } else {
@@ -496,7 +505,7 @@ export default function BuilderPage() {
           </div>
 
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-            {(["personal", "experience", "projects", "education", "skills", "template"] as const).map((tab) => (
+            {(["personal", "links", "experience", "projects", "education", "skills", "template"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -544,6 +553,60 @@ export default function BuilderPage() {
                   placeholder="A highly motivated professional..."
                 />
               </div>
+            </div>
+          )}
+
+          {activeTab === "links" && (
+            <div className="animate-in space-y-4 fade-in slide-in-from-bottom-2">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Links</h2>
+                <button
+                  onClick={() => setData({
+                    ...data,
+                    links: [...data.links, { id: Date.now().toString(), label: "", url: "" }],
+                  })}
+                  className="rounded-md bg-primary/10 px-3 py-1 text-sm text-primary hover:bg-primary/20"
+                >
+                  + Add Link
+                </button>
+              </div>
+
+              {data.links.length === 0 && <p className="text-sm text-foreground/50">No links added yet.</p>}
+
+              {data.links.map((linkItem, index) => (
+                <div key={linkItem.id} className="group relative space-y-3 rounded-lg border border-border p-4">
+                  <button
+                    onClick={() => {
+                      const newLinks = [...data.links];
+                      newLinks.splice(index, 1);
+                      setData({ ...data, links: newLinks });
+                    }}
+                    className="absolute right-2 top-2 text-xs font-bold text-destructive opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                  >
+                    Remove
+                  </button>
+                  <input
+                    placeholder="Label (e.g. Portfolio, LinkedIn, GitHub)"
+                    className="w-full border-b border-border bg-transparent p-2 text-sm focus:border-primary focus:outline-none"
+                    value={linkItem.label}
+                    onChange={(e) => {
+                      const newLinks = [...data.links];
+                      newLinks[index].label = e.target.value;
+                      setData({ ...data, links: newLinks });
+                    }}
+                  />
+                  <input
+                    placeholder="https://example.com"
+                    className="w-full border-b border-border bg-transparent p-2 text-sm focus:border-primary focus:outline-none"
+                    value={linkItem.url}
+                    onChange={(e) => {
+                      const newLinks = [...data.links];
+                      newLinks[index].url = e.target.value;
+                      setData({ ...data, links: newLinks });
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           )}
 
