@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import Link from "next/link";
 import { FileText, PencilLine, Plus } from "lucide-react";
 import { Suspense } from "react";
@@ -70,6 +71,7 @@ export default function DashboardPage() {
 }
 
 async function DashboardContent() {
+  await connection();
   const { userId } = await auth();
 
   if (!userId) {

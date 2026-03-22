@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SignInButton, UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
+import { connection } from "next/server";
 import { Sparkles } from "lucide-react";
 
 import { Suspense } from "react";
@@ -28,6 +29,7 @@ export default function Navbar() {
 }
 
 async function NavbarActions() {
+  await connection();
   const { userId } = await auth();
   
   return (
