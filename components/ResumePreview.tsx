@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import type { ResumeData } from "@/app/builder/page";
 
 type ResumeTemplate = "standard" | "modern" | "minimalist" | "creative" | "executive" | "tech";
@@ -8,9 +9,26 @@ type Props = {
   template?: ResumeTemplate;
 };
 
-function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
+type ResumeBodyProps = {
+  data: ResumeData;
+  skills: string[];
+  headingClass: string;
+  bodyTextClass: string;
+  companyClass: string;
+  dateClass: string;
+  skillsRenderer: (skills: string[]) => ReactNode;
+  educationRowClass?: string;
+  experienceRowClass?: string;
+  omitEducation?: boolean;
+  omitSkills?: boolean;
+  minimalist?: boolean;
+  executive?: boolean;
+  tech?: boolean;
+};
+
+function pageShell(frameTone: string, content: ReactNode) {
   return (
-    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden ${frameTone}`}>
+    <div className={`mx-auto flex min-h-[1123px] w-[794px] flex-col overflow-visible ${frameTone}`}>
       {content}
     </div>
   );
@@ -27,99 +45,45 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
   const skills = renderSkills(data.skills);
 
   if (template === "standard") {
-    return (
-      pageShell(
-        "bg-[#f8fafc]",
-        "bg-white",
-        <div className="flex h-full flex-col bg-white px-10 py-10">
-          <header className="mb-6 border-b-2 border-slate-900 pb-4">
-            <h1 className="mb-2 text-4xl font-bold uppercase tracking-wider text-slate-900">
-              {data.personalInfo.fullName || "Your Name"}
-            </h1>
-            <div className="flex flex-wrap gap-3 text-sm font-medium text-slate-600">
-              {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
-              {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
-              {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
-            </div>
-          </header>
-
-          <div className="flex-1 space-y-6 overflow-hidden">
-            {data.personalInfo.summary && (
-              <section>
-                <h2 className="mb-3 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
-                  Professional Summary
-                </h2>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{data.personalInfo.summary}</p>
-              </section>
-            )}
-
-            {data.experience.length > 0 && (
-              <section>
-                <h2 className="mb-4 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
-                  Experience
-                </h2>
-                <div className="space-y-4">
-                  {data.experience.map((exp) => (
-                    <div key={exp.id}>
-                      <div className="mb-1 flex items-start justify-between gap-4">
-                        <h3 className="text-base font-bold text-slate-900">{exp.title}</h3>
-                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-                          {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}
-                        </span>
-                      </div>
-                      <div className="mb-2 text-sm font-semibold text-slate-700">{exp.company}</div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{exp.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {data.education.length > 0 && (
-              <section>
-                <h2 className="mb-4 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
-                  Education
-                </h2>
-                <div className="space-y-3">
-                  {data.education.map((edu) => (
-                    <div key={edu.id} className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900">{edu.degree}</h3>
-                        <div className="text-sm text-slate-700">{edu.school}</div>
-                      </div>
-                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{edu.year}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {skills.length > 0 && (
-              <section>
-                <h2 className="mb-3 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900">
-                  Skills
-                </h2>
-                <div className="flex flex-wrap gap-2 text-sm text-slate-800">
-                  {skills.map((skill) => (
-                    <span key={skill} className="rounded border border-slate-300 px-2 py-1 font-medium">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            )}
+    return pageShell(
+      "bg-white",
+      <div className="flex min-h-[1123px] flex-col bg-white px-10 py-10">
+        <header className="mb-6 border-b-2 border-slate-900 pb-4">
+          <h1 className="mb-2 text-4xl font-bold uppercase tracking-wider text-slate-900">
+            {data.personalInfo.fullName || "Your Name"}
+          </h1>
+          <div className="flex flex-wrap gap-3 text-sm font-medium text-slate-600">
+            {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
+            {data.personalInfo.phone && <span>| {data.personalInfo.phone}</span>}
+            {data.personalInfo.location && <span>| {data.personalInfo.location}</span>}
           </div>
-          </div>,
-      )
+        </header>
+
+        <ResumeBody
+          data={data}
+          skills={skills}
+          headingClass="mb-3 border-b border-slate-300 pb-1 text-lg font-bold uppercase tracking-wide text-slate-900"
+          bodyTextClass="text-sm leading-relaxed text-slate-700"
+          companyClass="mb-2 text-sm font-semibold text-slate-700"
+          dateClass="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700"
+          skillsRenderer={(items) => (
+            <div className="flex flex-wrap gap-2 text-sm text-slate-800">
+              {items.map((skill) => (
+                <span key={skill} className="rounded border border-slate-300 px-2 py-1 font-medium">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
+        />
+      </div>,
     );
   }
 
   if (template === "modern") {
-    return (
-      pageShell(
-        "bg-[#eef2f7]",
-        "bg-[#f8fafc]",
-        <>
+    return pageShell(
+      "bg-[#f8fafc]",
+      <>
         <header className="bg-slate-950 px-10 py-10 text-white">
           <h1 className="mb-2 text-4xl font-light tracking-tight">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-slate-300">
@@ -147,17 +111,14 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             )}
           />
         </div>
-          </>,
-      )
+      </>,
     );
   }
 
   if (template === "minimalist") {
-    return (
-      pageShell(
-        "bg-[#f6f2ea]",
-        "bg-[#fcfaf7]",
-        <>
+    return pageShell(
+      "bg-[#fcfaf7]",
+      <>
         <header className="bg-[#fcfaf7] px-14 pb-8 pt-14 text-center">
           <h1 className="mb-4 text-5xl uppercase tracking-[0.2em] text-stone-900">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.22em] text-stone-500">
@@ -184,17 +145,14 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             )}
           />
         </div>
-          </>,
-      )
+      </>,
     );
   }
 
   if (template === "creative") {
-    return (
-      pageShell(
-        "bg-[#fff5e8]",
-        "bg-[#fffbf5]",
-        <>
+    return pageShell(
+      "bg-[#fffbf5]",
+      <>
         <header className="border-b border-amber-100 bg-[#fff7ea] px-10 pb-6 pt-10">
           <div className="text-sm font-black uppercase tracking-[0.28em] text-amber-500">Creative Resume</div>
           <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
@@ -242,20 +200,17 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
               skillsRenderer={() => null}
               omitEducation
               omitSkills
-          />
+            />
+          </div>
         </div>
-        </div>
-          </>,
-      )
+      </>,
     );
   }
 
   if (template === "executive") {
-    return (
-      pageShell(
-        "bg-[#f2f0ea]",
-        "bg-[#fcfbf8]",
-        <>
+    return pageShell(
+      "bg-[#fcfbf8]",
+      <>
         <header className="border-b-4 border-double border-slate-300 bg-[#fcfbf8] px-12 pb-8 pt-12 text-center">
           <h1 className="mb-3 text-4xl uppercase tracking-[0.14em] text-slate-900">{data.personalInfo.fullName || "Your Name"}</h1>
           <div className="flex flex-wrap justify-center gap-3 text-sm italic text-slate-600">
@@ -278,16 +233,13 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
             executive
           />
         </div>
-          </>,
-      )
+      </>,
     );
   }
 
-  return (
-    pageShell(
-      "bg-[#eaf5f0]",
-      "bg-[#f3fbf8]",
-      <>
+  return pageShell(
+    "bg-[#f3fbf8]",
+    <>
       <header className="border-b-4 border-emerald-500 bg-emerald-950 px-8 py-8 text-emerald-50">
         <h1 className="mb-2 text-3xl font-bold uppercase tracking-tight text-emerald-400">{data.personalInfo.fullName || "Your Name"}</h1>
         <div className="flex flex-wrap gap-3 font-mono text-sm text-emerald-100/75">
@@ -313,30 +265,12 @@ export default function ResumePreview({ data, template = "standard" }: Props) {
                 </span>
               ))}
             </div>
-            )}
-          />
-        </div>
-        </>,
-    )
+          )}
+        />
+      </div>
+    </>,
   );
 }
-
-type ResumeBodyProps = {
-  data: ResumeData;
-  skills: string[];
-  headingClass: string;
-  bodyTextClass: string;
-  companyClass: string;
-  dateClass: string;
-  skillsRenderer: (skills: string[]) => ReactNode;
-  educationRowClass?: string;
-  experienceRowClass?: string;
-  omitEducation?: boolean;
-  omitSkills?: boolean;
-  minimalist?: boolean;
-  executive?: boolean;
-  tech?: boolean;
-};
 
 function ResumeBody({
   data,
@@ -355,11 +289,11 @@ function ResumeBody({
   tech,
 }: ResumeBodyProps) {
   return (
-    <div className="flex-1 space-y-7 overflow-hidden">
+    <div className="space-y-7">
       {data.personalInfo.summary && (
         <section>
           <h2 className={headingClass}>{minimalist ? "Profile" : "Professional Summary"}</h2>
-          <p className={bodyTextClass}>{data.personalInfo.summary}</p>
+          <p className={`${bodyTextClass} whitespace-pre-wrap`}>{data.personalInfo.summary}</p>
         </section>
       )}
 
@@ -376,7 +310,7 @@ function ResumeBody({
                 )}
                 <div>
                   <div className="mb-1 flex items-start justify-between gap-4">
-                    <h3 className={`text-base font-bold ${executive ? "text-slate-900" : tech ? "text-slate-900" : "text-slate-900"}`}>
+                    <h3 className={`text-base font-bold ${executive || tech ? "text-slate-900" : "text-slate-900"}`}>
                       {exp.title}
                     </h3>
                     {!minimalist && <span className={dateClass}>{exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}</span>}
@@ -403,7 +337,7 @@ function ResumeBody({
                   {project.link && <span className={dateClass}>{project.link}</span>}
                 </div>
                 {project.techStack && <div className={companyClass}>{project.techStack}</div>}
-                <div className={bodyTextClass}>{project.description}</div>
+                <div className={`${bodyTextClass} whitespace-pre-wrap`}>{project.description}</div>
               </div>
             ))}
           </div>

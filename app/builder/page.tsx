@@ -88,7 +88,6 @@ async function readFileAsBase64(file: File) {
 export default function BuilderPage() {
   const mobilePreviewScale = 0.32;
   const mobilePreviewWidth = 794 * mobilePreviewScale;
-  const mobilePreviewHeight = 1123 * mobilePreviewScale;
   const mobileZoomScale = 0.62;
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
@@ -107,9 +106,32 @@ export default function BuilderPage() {
   const [resumeImportError, setResumeImportError] = useState("");
   const [resumeImportFileName, setResumeImportFileName] = useState("");
   const [isImportingResume, setIsImportingResume] = useState(false);
+  const [resumeDocumentHeight, setResumeDocumentHeight] = useState(1123);
+  const [desktopPreviewScale, setDesktopPreviewScale] = useState(0.72);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const desktopPreviewRef = useRef<HTMLDivElement | null>(null);
   const mobilePreviewRef = useRef<HTMLDivElement | null>(null);
+
+  const updateDesktopPreviewScale = () => {
+    const width = window.innerWidth;
+
+    if (width >= 1536) {
+      setDesktopPreviewScale(1);
+      return;
+    }
+
+    if (width >= 1280) {
+      setDesktopPreviewScale(0.92);
+      return;
+    }
+
+    if (width >= 1024) {
+      setDesktopPreviewScale(0.82);
+      return;
+    }
+
+    setDesktopPreviewScale(0.72);
+  };
 
   const getDownloadElement = () => {
     const candidates = [desktopPreviewRef.current, mobilePreviewRef.current];
@@ -122,6 +144,44 @@ export default function BuilderPage() {
 
     container.scrollTop = container.scrollHeight;
   }, [chatHistory, isChatLoading]);
+
+  useEffect(() => {
+    updateDesktopPreviewScale();
+
+    const handleResize = () => updateDesktopPreviewScale();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const measure = () => {
+      const measuredHeight = Math.max(
+        mobilePreviewRef.current?.scrollHeight ?? 0,
+        desktopPreviewRef.current?.scrollHeight ?? 0,
+        1123,
+      );
+
+      setResumeDocumentHeight(measuredHeight);
+    };
+
+    measure();
+
+    const observers: ResizeObserver[] = [];
+    const nodes = [mobilePreviewRef.current, desktopPreviewRef.current].filter(Boolean) as HTMLDivElement[];
+
+    for (const node of nodes) {
+      const observer = new ResizeObserver(() => measure());
+      observer.observe(node);
+      observers.push(observer);
+    }
+
+    return () => {
+      for (const observer of observers) {
+        observer.disconnect();
+      }
+    };
+  }, [data, template, activeTab, isPreviewZoomOpen]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -771,7 +831,7 @@ export default function BuilderPage() {
             className="relative overflow-hidden rounded-md shadow-[0_16px_40px_rgba(15,23,42,0.2)]"
             style={{
               width: `${mobilePreviewWidth}px`,
-              height: `${mobilePreviewHeight}px`,
+              height: `${resumeDocumentHeight * mobilePreviewScale}px`,
             }}
           >
             <div
@@ -784,9 +844,21 @@ export default function BuilderPage() {
           </button>
         </div>
 
-        <div className="hidden w-full items-start justify-center overflow-x-auto overflow-y-hidden pb-2 md:mt-[-64px] md:flex md:flex-1 md:overflow-y-auto md:pb-20 md:pt-16">
-          <div ref={desktopPreviewRef} className="group relative origin-top md:scale-[0.72] lg:scale-[0.82] xl:scale-[0.92] 2xl:scale-100">
-            <ResumePreview data={data} template={template} />
+        <div className="hidden w-full items-start justify-center overflow-x-auto overflow-y-auto pb-6 pt-16 md:flex md:flex-1">
+          <div
+            className="group relative origin-top-left"
+            style={{
+              width: `${794 * desktopPreviewScale}px`,
+              height: `${resumeDocumentHeight * desktopPreviewScale}px`,
+            }}
+          >
+            <div
+              ref={desktopPreviewRef}
+              className="absolute left-0 top-0 origin-top-left"
+              style={{ transform: `scale(${desktopPreviewScale})` }}
+            >
+              <ResumePreview data={data} template={template} />
+            </div>
           </div>
         </div>
       </section>
@@ -909,7 +981,7 @@ export default function BuilderPage() {
               className="relative mx-auto overflow-hidden rounded-lg shadow-[0_24px_60px_rgba(15,23,42,0.35)]"
               style={{
                 width: `${794 * mobileZoomScale}px`,
-                height: `${1123 * mobileZoomScale}px`,
+                height: `${resumeDocumentHeight * mobileZoomScale}px`,
               }}
             >
               <div

@@ -16,9 +16,9 @@ type Props = {
   letterDate?: string;
 };
 
-function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
+function pageShell(frameTone: string, content: ReactNode) {
   return (
-    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden ${pageTone} ${frameTone}`}>
+    <div className={`mx-auto flex h-[1123px] w-[794px] flex-col overflow-hidden ${frameTone}`}>
       {content}
     </div>
   );
@@ -54,19 +54,6 @@ export default function CoverLetterPreview({
               ? "bg-[#fffaf2] px-16 py-14 font-serif text-[15px] leading-8 text-amber-950"
               : "bg-[#f7f8fb] px-16 py-14 font-sans text-[15px] leading-8 text-slate-800";
 
-  const pageTone =
-    template === "classic"
-      ? "bg-[#f8f4ec]"
-      : template === "modern"
-        ? "bg-[#edf2f7]"
-        : template === "minimal"
-          ? "bg-[#f4f4f2]"
-          : template === "executive"
-            ? "bg-[#f2f0ea]"
-            : template === "editorial"
-              ? "bg-[#fff4e4]"
-              : "bg-[#e8edf6]";
-
   const frameTone =
     template === "classic"
       ? "bg-[#fffdfa]"
@@ -81,15 +68,18 @@ export default function CoverLetterPreview({
               : "bg-[#f7f8fb]";
 
   return pageShell(
-    pageTone,
     frameTone,
     <div className={bodyClass}>
       <div className="space-y-7 whitespace-pre-wrap">
         {(letterDate || companyName || companyAddress) && (
-          <div className="space-y-2">
-            {letterDate && <p>{letterDate}</p>}
-            {companyName && <p>{companyName}</p>}
-            {companyAddress && <p>{companyAddress}</p>}
+          <div className="space-y-8">
+            {letterDate && <p className="text-right">{letterDate}</p>}
+            {(companyName || companyAddress) && (
+              <div className="space-y-2">
+                {companyName && <p>{companyName}</p>}
+                {companyAddress && <p>{companyAddress}</p>}
+              </div>
+            )}
           </div>
         )}
         {paragraphs.map((paragraph, index) => (

@@ -364,14 +364,19 @@ export function exportCoverLetterToPdf({
   paintPageBackground();
 
   let cursorY = topMargin;
-  const headerLines = [letterDate?.trim(), companyName?.trim(), companyAddress?.trim()].filter(Boolean) as string[];
+  if (letterDate?.trim()) {
+    pdf.text(letterDate.trim(), A4_WIDTH_MM - horizontalMargin, cursorY, { align: "right" });
+    cursorY += lineHeight + paragraphGap;
+  }
 
-  for (const line of headerLines) {
+  const recipientLines = [companyName?.trim(), companyAddress?.trim()].filter(Boolean) as string[];
+
+  for (const line of recipientLines) {
     pdf.text(line, horizontalMargin, cursorY);
     cursorY += lineHeight;
   }
 
-  if (headerLines.length > 0) {
+  if (recipientLines.length > 0) {
     cursorY += paragraphGap;
   }
 
