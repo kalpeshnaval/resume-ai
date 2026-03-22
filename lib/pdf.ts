@@ -20,6 +20,9 @@ type ExportCoverLetterPdfOptions = {
   text: string;
   fileName: string;
   template: CoverLetterTemplate;
+  companyName?: string;
+  companyAddress?: string;
+  letterDate?: string;
 };
 
 const A4_WIDTH_MM = 210;
@@ -27,6 +30,7 @@ const A4_HEIGHT_MM = 297;
 const ROW_SCAN_ALPHA_THRESHOLD = 24;
 const CONTINUED_PAGE_TOP_MM = 12;
 const SPLIT_PAGE_BOTTOM_MM = 12;
+const PAGE_BREAK_TOLERANCE_PX = 8;
 
 function findNaturalPageBreak(
   context: CanvasRenderingContext2D,
@@ -150,7 +154,7 @@ export async function exportElementToPdf({ element, fileName, backgroundColor = 
     const pdf = new jsPDF("p", "mm", "a4");
     const fullPageSliceHeight = Math.floor((canvas.width * A4_HEIGHT_MM) / A4_WIDTH_MM);
     const canvasContext = canvas.getContext("2d");
-    const usesSplitPadding = canvas.height > fullPageSliceHeight;
+    const usesSplitPadding = canvas.height > fullPageSliceHeight + PAGE_BREAK_TOLERANCE_PX;
 
     if (!canvasContext) {
       throw new Error("Unable to read rendered PDF canvas.");
@@ -159,13 +163,17 @@ export async function exportElementToPdf({ element, fileName, backgroundColor = 
     let offsetY = 0;
     let pageIndex = 0;
 
-    while (offsetY < canvas.height) {
+    while (offsetY < canvas.height - PAGE_BREAK_TOLERANCE_PX) {
       const topMarginMm = usesSplitPadding && pageIndex > 0 ? CONTINUED_PAGE_TOP_MM : 0;
       const bottomMarginMm = usesSplitPadding ? SPLIT_PAGE_BOTTOM_MM : 0;
       const usablePageHeightMm = A4_HEIGHT_MM - topMarginMm - bottomMarginMm;
       const sourceSliceHeight = Math.floor((canvas.width * usablePageHeightMm) / A4_WIDTH_MM);
       const remainingHeight = canvas.height - offsetY;
       let currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
+
+      if (remainingHeight <= PAGE_BREAK_TOLERANCE_PX) {
+        break;
+      }
 
       if (remainingHeight > sourceSliceHeight) {
         const preferredBreak = offsetY + currentSliceHeight;
@@ -324,7 +332,14 @@ function getCoverLetterTheme(template: CoverLetterTemplate) {
   }
 }
 
-export function exportCoverLetterToPdf({ text, fileName, template }: ExportCoverLetterPdfOptions) {
+export function exportCoverLetterToPdf({
+  text,
+  fileName,
+  template,
+  companyName,
+  companyAddress,
+  letterDate,
+}: ExportCoverLetterPdfOptions) {
   const pdf = new jsPDF("p", "mm", "a4");
   const horizontalMargin = 18;
   const topMargin = 20;
@@ -349,6 +364,16 @@ export function exportCoverLetterToPdf({ text, fileName, template }: ExportCover
   paintPageBackground();
 
   let cursorY = topMargin;
+  const headerLines = [letterDate?.trim(), companyName?.trim(), companyAddress?.trim()].filter(Boolean) as string[];
+
+  for (const line of headerLines) {
+    pdf.text(line, horizontalMargin, cursorY);
+    cursorY += lineHeight;
+  }
+
+  if (headerLines.length > 0) {
+    cursorY += paragraphGap;
+  }
 
   for (const paragraph of paragraphs) {
     const content = paragraph.trim();

@@ -42,6 +42,11 @@ export default function CoverLetterPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
+  const [letterDate, setLetterDate] = useState(new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }));
   const [userContext, setUserContext] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [template, setTemplate] = useState<CoverLetterTemplate>("classic");
@@ -92,6 +97,9 @@ export default function CoverLetterPage() {
         text: generatedContent,
         fileName: `${companyName || "Company"}_Cover_Letter.pdf`,
         template,
+        companyName,
+        companyAddress,
+        letterDate,
       });
     } catch (error) {
       console.error(error);
@@ -163,6 +171,19 @@ export default function CoverLetterPage() {
                   className="h-11 w-full rounded-xl border border-border bg-accent/30 px-4 text-sm outline-none focus:ring-1 focus:ring-primary"
                   value={companyAddress}
                   onChange={(e) => setCompanyAddress(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="h-4 w-4" /> Letter Date
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 22 March 2026"
+                  className="h-11 w-full rounded-xl border border-border bg-accent/30 px-4 text-sm outline-none focus:ring-1 focus:ring-primary"
+                  value={letterDate}
+                  onChange={(e) => setLetterDate(e.target.value)}
                 />
               </div>
 
@@ -270,7 +291,13 @@ export default function CoverLetterPage() {
 
                 <div className="flex justify-start overflow-x-auto pb-4 sm:justify-center">
                   <div className="hidden sm:block">
-                    <CoverLetterPreview content={generatedContent} template={template} />
+                    <CoverLetterPreview
+                      content={generatedContent}
+                      template={template}
+                      companyName={companyName}
+                      companyAddress={companyAddress}
+                      letterDate={letterDate}
+                    />
                   </div>
                   <button
                     type="button"
@@ -282,9 +309,25 @@ export default function CoverLetterPage() {
                     }}
                   >
                     <div className="absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${mobilePreviewScale})` }}>
-                      <CoverLetterPreview content={generatedContent} template={template} />
+                      <CoverLetterPreview
+                        content={generatedContent}
+                        template={template}
+                        companyName={companyName}
+                        companyAddress={companyAddress}
+                        letterDate={letterDate}
+                      />
                     </div>
                   </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Edit Cover Letter</label>
+                  <textarea
+                    className="min-h-[260px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none focus:ring-1 focus:ring-primary"
+                    value={generatedContent}
+                    onChange={(e) => setGeneratedContent(e.target.value)}
+                    placeholder="Edit your cover letter content here..."
+                  />
                 </div>
               </div>
             ) : (
@@ -334,7 +377,13 @@ export default function CoverLetterPage() {
                 className="absolute left-0 top-0 origin-top-left"
                 style={{ transform: `scale(${mobileZoomScale})` }}
               >
-                <CoverLetterPreview content={generatedContent} template={template} />
+                <CoverLetterPreview
+                  content={generatedContent}
+                  template={template}
+                  companyName={companyName}
+                  companyAddress={companyAddress}
+                  letterDate={letterDate}
+                />
               </div>
             </div>
           </button>

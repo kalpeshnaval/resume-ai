@@ -42,12 +42,12 @@ const initialData: ResumeData = {
 };
 
 const resumePageBackgrounds: Record<TemplateType, string> = {
-  standard: "#f8fafc",
-  modern: "#eef2f7",
-  minimalist: "#f6f2ea",
-  creative: "#fff5e8",
-  executive: "#f2f0ea",
-  tech: "#eaf5f0",
+  standard: "#ffffff",
+  modern: "#f8fafc",
+  minimalist: "#fcfaf7",
+  creative: "#fffbf5",
+  executive: "#fcfbf8",
+  tech: "#f3fbf8",
 };
 
 async function readFileAsBase64(file: File) {

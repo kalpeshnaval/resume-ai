@@ -11,6 +11,9 @@ export type CoverLetterTemplate =
 type Props = {
   content: string;
   template: CoverLetterTemplate;
+  companyName?: string;
+  companyAddress?: string;
+  letterDate?: string;
 };
 
 function pageShell(pageTone: string, frameTone: string, content: ReactNode) {
@@ -29,7 +32,13 @@ function getParagraphs(content: string) {
     .filter(Boolean);
 }
 
-export default function CoverLetterPreview({ content, template }: Props) {
+export default function CoverLetterPreview({
+  content,
+  template,
+  companyName,
+  companyAddress,
+  letterDate,
+}: Props) {
   const paragraphs = getParagraphs(content);
 
   const bodyClass =
@@ -76,6 +85,13 @@ export default function CoverLetterPreview({ content, template }: Props) {
     frameTone,
     <div className={bodyClass}>
       <div className="space-y-7 whitespace-pre-wrap">
+        {(letterDate || companyName || companyAddress) && (
+          <div className="space-y-2">
+            {letterDate && <p>{letterDate}</p>}
+            {companyName && <p>{companyName}</p>}
+            {companyAddress && <p>{companyAddress}</p>}
+          </div>
+        )}
         {paragraphs.map((paragraph, index) => (
           <p key={index}>{paragraph}</p>
         ))}
