@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { Building2, Download, FileText, Loader2, MapPin, Sparkles, Upload, X } from "lucide-react";
 
@@ -33,6 +33,14 @@ async function readFileAsBase64(file: File) {
   });
 }
 
+function formatLetterDate() {
+  return new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default function CoverLetterPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const mobilePreviewScale = 0.32;
@@ -42,17 +50,17 @@ export default function CoverLetterPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
-  const [letterDate, setLetterDate] = useState(new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }));
+  const [letterDate, setLetterDate] = useState("");
   const [userContext, setUserContext] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [template, setTemplate] = useState<CoverLetterTemplate>("classic");
   const [isPreviewZoomOpen, setIsPreviewZoomOpen] = useState(false);
   const [resumeFile, setResumeFile] = useState<ResumeReferenceFile | null>(null);
   const [resumeUploadError, setResumeUploadError] = useState("");
+
+  useEffect(() => {
+    setLetterDate((currentValue) => currentValue || formatLetterDate());
+  }, []);
 
   const handleGenerate = async () => {
     if (!companyName.trim()) return;
