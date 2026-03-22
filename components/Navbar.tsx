@@ -41,10 +41,10 @@ async function NavbarActions() {
               Dashboard
             </Link>
             <Link href="/builder" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-              Builder
+              Resume
             </Link>
             <Link href="/cover-letter" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-              AI Cover Letter
+              Cover Letter
             </Link>
             <UserButton />
           </>

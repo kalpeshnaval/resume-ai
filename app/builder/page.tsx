@@ -36,6 +36,8 @@ type ResumeReferenceFile = {
   data: string;
 };
 
+type SaveMessageTone = "success" | "error";
+
 const initialData: ResumeData = {
   personalInfo: { fullName: "", email: "", phone: "", location: "", summary: "" },
   links: [],
@@ -107,6 +109,7 @@ export default function BuilderPage() {
   const [savedResumeId, setSavedResumeId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [saveMessageTone, setSaveMessageTone] = useState<SaveMessageTone>("success");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isPreviewZoomOpen, setIsPreviewZoomOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
@@ -153,6 +156,18 @@ export default function BuilderPage() {
 
     container.scrollTop = container.scrollHeight;
   }, [chatHistory, isChatLoading]);
+
+  useEffect(() => {
+    if (!saveMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveMessage("");
+    }, 3200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [saveMessage]);
 
   useEffect(() => {
     updateDesktopPreviewScale();
@@ -220,10 +235,12 @@ export default function BuilderPage() {
         setData(normalizeResumeData(storedData));
         setTemplate(storedTemplate);
         setSavedResumeId(payload.resume.id);
+        setSaveMessageTone("success");
         setSaveMessage(`Loaded "${payload.resume.title}".`);
       } catch (error) {
         console.error(error);
         if (!isCancelled) {
+          setSaveMessageTone("error");
           setSaveMessage(error instanceof Error ? error.message : "Failed to load resume.");
         }
       }
@@ -248,6 +265,7 @@ export default function BuilderPage() {
     }
 
     setIsSaving(true);
+    setSaveMessageTone("success");
     setSaveMessage("");
 
     try {
@@ -276,6 +294,7 @@ export default function BuilderPage() {
 
       const resumeId = payload.resume.id as string;
       setSavedResumeId(resumeId);
+      setSaveMessageTone("success");
       setSaveMessage("Resume saved securely to your account.");
 
       const nextSearchParams = new URLSearchParams(window.location.search);
@@ -283,6 +302,7 @@ export default function BuilderPage() {
       router.replace(`/builder?${nextSearchParams.toString()}`, { scroll: false });
     } catch (error) {
       console.error(error);
+      setSaveMessageTone("error");
       setSaveMessage(error instanceof Error ? error.message : "Failed to save resume.");
     } finally {
       setIsSaving(false);
@@ -391,6 +411,7 @@ export default function BuilderPage() {
       }
 
       setData(normalizeResumeData(payload.updatedData));
+      setSaveMessageTone("success");
       setSaveMessage(payload.message || `Imported resume data from ${file.name}.`);
       setChatHistory((prev) => [
         ...prev,
@@ -398,6 +419,7 @@ export default function BuilderPage() {
       ]);
     } catch (error) {
       console.error(error);
+      setSaveMessageTone("error");
       setResumeImportError(error instanceof Error ? error.message : "Failed to import resume.");
     } finally {
       setIsImportingResume(false);
@@ -447,8 +469,8 @@ export default function BuilderPage() {
     <main className="flex min-h-[calc(100vh-64px)] flex-1 flex-col bg-accent/20 md:h-[calc(100vh-64px)] md:flex-row md:overflow-hidden">
       <aside className="flex w-full flex-col overflow-y-auto border-b border-border bg-card md:h-full md:w-1/2 md:border-b-0 md:border-r lg:w-[45%]">
         <div className="sticky top-0 z-10 border-b border-border bg-background p-4">
-          <h1 className="text-2xl font-bold">Resume Builder</h1>
-          <p className="text-sm text-foreground/60">Fill in your details below to generate.</p>
+          <h1 className="text-2xl font-bold">Resume</h1>
+          <p className="text-sm text-foreground/60">Build, refine, and export your resume.</p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
@@ -467,10 +489,19 @@ export default function BuilderPage() {
               <UploadCloud className="h-4 w-4" />
               {isGenerating ? "Generating..." : "Download PDF"}
             </button>
-            {saveMessage && (
-              <span className="w-full text-xs font-medium text-emerald-600 sm:w-auto">{saveMessage}</span>
-            )}
           </div>
+
+          {saveMessage && (
+            <div
+              className={`mt-3 rounded-lg border px-3 py-2 text-sm font-medium ${
+                saveMessageTone === "error"
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              {saveMessage}
+            </div>
+          )}
 
           <div className="mt-4 rounded-xl border border-dashed border-border bg-accent/30 p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -880,13 +911,6 @@ export default function BuilderPage() {
             {isGenerating ? "Generating..." : "Download PDF"}
           </button>
         </div>
-
-        {saveMessage && (
-          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 shadow-sm md:absolute md:left-8 md:top-4 md:z-20">
-            {saveMessage}
-          </div>
-        )}
-
         <div className="flex w-full justify-center overflow-hidden pb-2 md:hidden">
           <button
             type="button"

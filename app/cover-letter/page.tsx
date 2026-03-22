@@ -152,7 +152,7 @@ export default function CoverLetterPage() {
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h1 className="mb-6 flex items-center gap-2 text-2xl font-bold">
               <Sparkles className="h-6 w-6 text-primary" />
-              Cover Letter AI
+              Cover Letter
             </h1>
 
             <div className="space-y-4">
